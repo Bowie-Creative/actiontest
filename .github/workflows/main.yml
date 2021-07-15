@@ -10,10 +10,9 @@ jobs:
     steps: 
     - uses: actions/checkout@v2
     - name: GitHub Action Deploy to WP Engine
-      uses: wpengine/github-action-wpe-site-deploy@main
+      uses: wpengine/github-action-wpe-site-deploy@feature/stage
       env: 
           WPE_ENV_NAME: selive
           WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPENGINE_SSH_KEY_PRIVATE }}
           TPO_SRC_PATH: ""
           TPO_PATH: ""
-          
