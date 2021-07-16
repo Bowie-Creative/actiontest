@@ -23,3 +23,6 @@ jobs:
 
         STG_BRANCH: feature/stage
         STG_ENV: selivestaging
+
+        DEV_BRANCH: feature/dev
+        DEV_ENV: sedemodev
