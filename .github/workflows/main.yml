@@ -20,3 +20,6 @@ jobs:
       # Branches & Environments 
         PRD_BRANCH: main
         PRD_ENV: selive
+
+        STG_BRANCH: feature/stage
+        STG_ENV: selivestaging
