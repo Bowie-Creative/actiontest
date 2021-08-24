@@ -1,0 +1,39 @@
+{
+    "version":1,
+"settings": {
+    "color": {
+        "palette": [
+            {
+                "slug": "black",
+                "color": "#000000",
+                "name": "Black"
+            },
+            {
+                "slug": "white",
+                "color": "#FFFFFF",
+                "name": "White"
+            },
+            {
+                "slug": "dark-grey",
+                "color": "#121212",
+                "name": "Dark grey"
+            },
+            {
+                "slug": "medium-grey",
+                "color": "#383838",
+                "name": "Medium grey"
+            },
+            {
+                "slug": "cyan",
+                "color": "#00838f",
+                "name": "Cyan"
+            },
+            {
+                "slug": "light-cyan",
+                "color": "#4fb3bf",
+                "name": "Light cyan"
+            }
+        ]
+    }
+}
+}
