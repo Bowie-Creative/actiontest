@@ -8,13 +8,12 @@ jobs:
     steps: 
     - uses: actions/checkout@v2
     - name: GitHub Action Deploy to WP Engine
-      uses: cdguglermbb/github-action-wpe-site-deploy@main
+      uses: wpengine/github-action-wpe-site-deploy@main
       env:
       
       # Keys, lint & url options 
         WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }} 
         PHP_LINT: FALSE
-        FLAGS: -a --inplace --delete --out-format="%n"  --exclude=".*"
         TPO_SRC_PATH: "wp-content/themes/authority-pro/"
         TPO_PATH: "wp-content/themes/authority-pro/"
       
