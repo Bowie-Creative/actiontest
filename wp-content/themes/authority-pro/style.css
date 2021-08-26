@@ -178,7 +178,7 @@ textarea:focus,
 }
 
 a {
-	color: #000cff;
+	color: #fa06fa;
 	text-decoration: underline;
 }
 
@@ -1470,7 +1470,7 @@ figcaption,
 .site-title a,
 .site-title a:focus,
 .site-title a:hover {
-	color: #a19ba1
+	color: #fa06fa
 	text-decoration: none;
 }
 
