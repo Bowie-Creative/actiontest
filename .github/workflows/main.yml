@@ -10,10 +10,11 @@ jobs:
     - name: GitHub Action Deploy to WP Engine
       uses: wpengine/github-action-wpe-site-deploy@flags
       env:
-      
+
       # Keys, lint & url options 
         WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }} 
         PHP_LINT: FALSE
+        FLAGS: -azvr --inplace --delete --exclude=".*"
         TPO_SRC_PATH: "wp-content/themes/authority-pro/"
         TPO_PATH: "wp-content/themes/authority-pro/"
       
