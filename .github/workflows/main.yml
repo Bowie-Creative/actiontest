@@ -8,7 +8,7 @@ jobs:
     steps: 
     - uses: actions/checkout@v2
     - name: GitHub Action Deploy to WP Engine
-      uses: wpengine/github-action-wpe-site-deploy@flags
+      uses: wpengine/github-action-wpe-site-deploy@main
       env:
 
       # Keys, lint & url options 

@@ -178,13 +178,13 @@ textarea:focus,
 }
 
 a {
-	color: #555;
+	color: rgb(13, 192, 7);
 	text-decoration: underline;
 }
 
 a:focus,
 a:hover {
-	color: #333;
+	color: rgb(14, 209, 8);
 	text-decoration: none;
 }
 
