@@ -1,0 +1,3 @@
+commit push 
+then 
+delete this file through destructive git push 
