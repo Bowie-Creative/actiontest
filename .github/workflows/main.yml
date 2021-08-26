@@ -8,9 +8,8 @@ jobs:
     steps: 
     - uses: actions/checkout@v2
     - name: GitHub Action Deploy to WP Engine
-      uses: wpengine/github-action-wpe-site-deploy@main
+      uses: wpengine/github-action-wpe-site-deploy@flags
       with:
-      
       # Keys, lint & url options 
         WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }} 
         PHP_LINT: FALSE
