@@ -12,18 +12,8 @@ jobs:
       with:
 
       # Keys, lint & url options 
-        WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }} 
-        PHP_LINT: FALSE
-        FLAGS: -azvr --inplace --delete --exclude=".*"
-        TPO_SRC_PATH: "wp-content/themes/authority-pro/"
-        TPO_PATH: "wp-content/themes/authority-pro/"
+        WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }}
       
       # Branches & Environments 
         PRD_BRANCH: main
         PRD_ENV: selive
-
-        STG_BRANCH: feature/stage
-        STG_ENV: selivestaging
-
-        DEV_BRANCH: feature/dev
-        DEV_ENV: sedemodev
