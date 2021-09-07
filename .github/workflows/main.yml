@@ -8,11 +8,13 @@ jobs:
     steps: 
     - uses: actions/checkout@v2
     - name: GitHub Action Deploy to WP Engine
-      uses: wpengine/github-action-wpe-site-deploy@feature/cacheopt
+      uses: wpengine/github-action-wpe-site-deploy@stage/cleanup
       with:
 
       # Keys, lint & url options 
         WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }}
+        TPO_SRC_PATH: "wp-content/themes/authority-pro/"
+        TPO_PATH: "wp-content/themes/authority-pro/"
       
       # Branches & Environments 
         PRD_BRANCH: main
