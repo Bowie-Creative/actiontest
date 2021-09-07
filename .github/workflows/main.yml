@@ -13,7 +13,7 @@ jobs:
 
       # Keys, lint & url options 
         WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }}
-        FLAGS: -azvr --inplace --delete --exclude={'.*', 'wp-content/uploads/'}
+        FLAGS: -azvr --inplace --delete --exclude={'.*', 'wp-content/uploads/*'}
         CACHE_CLEAR: FALSE 
       
       # Branches & Environments 
