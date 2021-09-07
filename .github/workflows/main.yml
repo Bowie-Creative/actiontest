@@ -8,13 +8,13 @@ jobs:
     steps: 
     - uses: actions/checkout@v2
     - name: GitHub Action Deploy to WP Engine
-      uses: wpengine/github-action-wpe-site-deploy@feature/exclude
+      uses: wpengine/github-action-wpe-site-deploy@stage/cleanup 
       with:
 
       # Keys, lint & url options 
         WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }}
         FLAGS: -azvr --inplace --delete --exclude=".*"
-        CACHE_CLEAR: FALSE 
+        
       
       # Branches & Environments 
         PRD_BRANCH: main
