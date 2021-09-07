@@ -13,8 +13,6 @@ jobs:
 
       # Keys, lint & url options 
         WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }}
-        TPO_SRC_PATH: "wp-content/themes/authority-pro/"
-        TPO_PATH: "wp-content/themes/authority-pro/"
       
       # Branches & Environments 
         PRD_BRANCH: main
