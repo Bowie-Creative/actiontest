@@ -16,8 +16,8 @@ jobs:
         PHP_LINT: TRUE
         FLAGS: -azvr --inplace --delete --exclude=".*"
         CACHE_CLEAR: TRUE
-        TPO_SRC_PATH: "wp-content/themes/genesis-child-theme/"
-        TPO_PATH: "wp-content/themes/genesis-child-theme/"
+        TPO_SRC_PATH: "wp-content/themes/authority-pro/"
+        TPO_PATH: "wp-content/themes/authority-pro/"
         
       
       # Branches & Environments 
