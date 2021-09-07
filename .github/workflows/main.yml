@@ -8,7 +8,7 @@ jobs:
     steps: 
     - uses: actions/checkout@v2
     - name: GitHub Action Deploy to WP Engine
-      uses: wpengine/github-action-wpe-site-deploy@stage/cleanup
+      uses: wpengine/github-action-wpe-site-deploy@feature/exclude
       with:
 
       # Keys, lint & url options 
