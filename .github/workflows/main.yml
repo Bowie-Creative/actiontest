@@ -14,7 +14,6 @@ jobs:
       # Deploy vars 
         WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }} 
         PHP_LINT: TRUE
-        FLAGS: -azvr --inplace --delete --exclude=".*"
         CACHE_CLEAR: TRUE
         TPO_SRC_PATH: "wp-content/themes/authority-pro/"
         TPO_PATH: "wp-content/themes/authority-pro/"
