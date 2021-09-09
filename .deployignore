@@ -1,1 +1,3 @@
-this is the root ignore
+#Files to EXCLUDE from deploy
+*.txt
+*.bak
