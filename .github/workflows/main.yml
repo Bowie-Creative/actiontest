@@ -14,7 +14,7 @@ jobs:
       # Deploy vars 
         WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }} 
         CACHE_CLEAR: TRUE
-        FLAGS: -azvr --inplace --delete --exclude-from=.deployignore
+        FLAGS: -azvr --inplace --delete --exclude-from ".deployignore"
         TPO_SRC_PATH: "wp-content/themes/authority-pro/"
         TPO_PATH: "wp-content/themes/authority-pro"
         
