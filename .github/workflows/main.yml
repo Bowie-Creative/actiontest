@@ -21,10 +21,10 @@ jobs:
       
       # Branches & Environments 
         PRD_BRANCH: main
-        PRD_ENV: fourcornerprod
+        PRD_ENV: madisonsadler
 
         STG_BRANCH: stagebranch 
-        STG_ENV: fourcornerstag
+        STG_ENV: 
 
         DEV_BRANCH: dev
         DEV_ENV: sedemodev
