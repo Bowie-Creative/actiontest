@@ -20,7 +20,7 @@ jobs:
       # Branches & Environments 
 
         STG_BRANCH: stagebranch 
-        STG_ENV: 
+        STG_ENV: selivestaging
 
         DEV_BRANCH: dev
         DEV_ENV: sedemodev
