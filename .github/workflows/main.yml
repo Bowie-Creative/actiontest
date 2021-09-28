@@ -19,8 +19,6 @@ jobs:
       
       # Branches & Environments 
 
-        PRD_BRANCH: main
-        PRD_ENV: selive
 
         STG_BRANCH: stagebranch 
         STG_ENV: selivestaging
