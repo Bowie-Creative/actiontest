@@ -48,13 +48,16 @@ class Refinery extends Controller {
 		];
 	}
 
-
 	/**
 	 * @param \WP_Query $query
 	 *
 	 * @return string
 	 */
 	private function get_search( \WP_Query $query ) {
+		if ( ! $this->is_search_enabled() ) {
+			return '';
+		}
+
 		$search    = $query->is_search() && isset( $query->query['s'] ) ? stripslashes( $query->query['s'] ) : '';
 		$component = Search_Box::factory( [
 			Search_Box::NAME           => 's',
@@ -63,6 +66,24 @@ class Refinery extends Controller {
 		] );
 
 		return $component->render();
+	}
+
+	/**
+	 * @return string[]
+	 */
+	protected function get_wrapper_classes() {
+		$classes = parent::get_wrapper_classes();
+		if ( ! $this->is_search_enabled() ) {
+			$classes[] = 'bc-refinery--no-search';
+		}
+		return $classes;
+	}
+
+	/**
+	 * @return bool
+	 */
+	private function is_search_enabled() {
+		return get_option( \BigCommerce\Customizer\Sections\Product_Archive::SEARCH_FIELD, 'yes' ) !== 'no';
 	}
 
 	/**
@@ -87,8 +108,9 @@ class Refinery extends Controller {
 		 * This filter is documents in src/BigCommerce/Post_Types/Product/Query.php
 		 */
 		$default_sort = apply_filters( 'bigcommerce/query/default_sort', Customizer\Sections\Product_Archive::SORT_FEATURED );
-		if ( array_key_exists( 'bc-sort', $_GET ) && array_key_exists( $_GET['bc-sort'], $choices ) ) {
-			$sort = $_GET['bc-sort'];
+		$bc_sort      = filter_input( INPUT_GET, 'bc-sort', FILTER_SANITIZE_STRING );
+		if ( $bc_sort && array_key_exists( $bc_sort, $choices ) ) {
+			$sort = $bc_sort;
 		} else {
 			$sort = $default_sort;
 		}

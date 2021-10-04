@@ -80,7 +80,7 @@ class Import_Status {
 	 * @action self::AJAX_ACTION_IMPORT_STATUS 0
 	 */
 	public function validate_ajax_current_status_request() {
-		$nonce = filter_input( INPUT_GET, '_wpnonce' );
+		$nonce = filter_input( INPUT_GET, '_wpnonce', FILTER_SANITIZE_STRING );
 		if ( empty( $nonce ) || ! wp_verify_nonce( $nonce, self::AJAX_ACTION_IMPORT_STATUS ) ) {
 			wp_send_json_error( [
 				'code'    => 'invalid_nonce',
@@ -178,10 +178,10 @@ class Import_Status {
 		$time      = date_i18n( get_option( 'time_format', 'H:i' ), $timestamp, false );
 		switch ( $previous[ 'status' ] ) {
 			case Status::COMPLETED:
-				$status_string = sprintf( __( 'Last import completed on <strong>%s at %s</strong>.', 'bigcommerce' ), $date, $time );
+				$status_string = sprintf( __( 'Last import completed on <strong>%s at %s (%s)</strong>.', 'bigcommerce' ), $date, $time, $this->get_timezone_string() );
 				break;
 			case Status::FAILED:
-				$status_string = sprintf( __( 'Last import failed on <strong>%s at %s</strong>.', 'bigcommerce' ), $date, $time );
+				$status_string = sprintf( __( 'Last import failed on <strong>%s at %s (%s)</strong>.', 'bigcommerce' ), $date, $time, $this->get_timezone_string() );
 				break;
 			case Status::NOT_STARTED:
 				$status_string = '';
@@ -207,7 +207,7 @@ class Import_Status {
 			$timestamp     = strtotime( get_date_from_gmt( date( 'Y-m-d H:i:s', (int) $next ) ) );
 			$date          = date_i18n( get_option( 'date_format', 'Y-m-d' ), $timestamp, false );
 			$time          = date_i18n( get_option( 'time_format', 'H:i' ), $timestamp, false );
-			$status_string = sprintf( __( 'Your next import is scheduled to start on <strong>%s at %s</strong>.', 'bigcommerce' ), $date, $time );
+			$status_string = sprintf( __( 'Your next import is scheduled to start on <strong>%s at %s (%s)</strong>.', 'bigcommerce' ), $date, $time, $this->get_timezone_string() );
 		} else {
 			$status_string = ''; // an import is probably in progress
 		}
@@ -243,5 +243,13 @@ class Import_Status {
 		) );
 
 		return (int) $count;
+	}
+
+	private function get_timezone_string() {
+		$timezone = wp_timezone_string();
+		if ( ! empty( $timezone[0] ) && $timezone[0] === '+' ) {
+			$timezone = 'UTC' . $timezone;
+		}
+		return $timezone;
 	}
 }

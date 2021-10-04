@@ -216,9 +216,13 @@ class DashboardWidget {
 			<img class="wpforms-dash-widget-block-sullie-logo" src="<?php echo \esc_url( WPFORMS_PLUGIN_URL . 'assets/images/sullie.png' ); ?>" alt="<?php \esc_attr_e( 'Sullie the WPForms mascot', 'wpforms-lite' ); ?>">
 			<h2><?php \esc_html_e( 'Create Your First Form to Start Collecting Leads', 'wpforms-lite' ); ?></h2>
 			<p><?php \esc_html_e( 'You can use WPForms to build contact forms, surveys, payment forms, and more with just a few clicks.', 'wpforms-lite' ); ?></p>
-			<a href="<?php echo \esc_url( $create_form_url ); ?>" class="button button-primary">
-				<?php \esc_html_e( 'Create Your Form', 'wpforms-lite' ); ?>
-			</a>
+
+			<?php if ( wpforms_current_user_can( 'create_forms' ) ) : ?>
+				<a href="<?php echo \esc_url( $create_form_url ); ?>" class="button button-primary">
+					<?php \esc_html_e( 'Create Your Form', 'wpforms-lite' ); ?>
+				</a>
+			<?php endif; ?>
+
 			<a href="<?php echo \esc_url( $learn_more_url ); ?>" class="button" target="_blank" rel="noopener noreferrer">
 				<?php \esc_html_e( 'Learn More', 'wpforms-lite' ); ?>
 			</a>
@@ -362,7 +366,9 @@ class DashboardWidget {
 		<div class="wpforms-dash-widget-recommended-plugin-block">
 			<p><?php \esc_html_e( 'Recommended Plugin:', 'wpforms-lite' ); ?>
 				<b><?php \esc_html_e( 'MonsterInsights', 'wpforms-lite' ); ?></b> -
-				<a href="<?php echo \esc_url( $install_mi_url ); ?>"><?php \esc_html_e( 'Install', 'wpforms-lite' ); ?></a> &vert;
+				<?php if ( wpforms_can_install( 'plugin' ) ) { ?>
+					<a href="<?php echo \esc_url( $install_mi_url ); ?>"><?php \esc_html_e( 'Install', 'wpforms-lite' ); ?></a> &vert;
+				<?php } ?>
 				<a href="https://www.monsterinsights.com/?utm_source=wpformsplugin&utm_medium=link&utm_campaign=wpformsdashboardwidget"><?php \esc_html_e( 'Learn More', 'wpforms-lite' ); ?></a></p>
 		</div>
 		<?php

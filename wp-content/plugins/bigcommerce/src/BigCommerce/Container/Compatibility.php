@@ -3,9 +3,10 @@
 
 namespace BigCommerce\Container;
 
-
 use BigCommerce\Compatibility\Template_Compatibility;
 use BigCommerce\Compatibility\Themes\Theme_Factory;
+use BigCommerce\Compatibility\Matomo\Matomo;
+use BigCommerce\Compatibility\Akismet\Akismet;
 use BigCommerce\Compatibility\WooCommerce\Facade;
 use BigCommerce\Compatibility\WooCommerce\Cart as WC_Cart;
 use BigCommerce\Pages\Account_Page;
@@ -17,6 +18,8 @@ class Compatibility extends Provider {
 	const TEMPLATES     = 'theme_compat.templates';
 	const THEME         = 'theme_compat.theme';
 	const WC_FACADE     = 'woo_compat.wc_facade';
+	const MATOMO        = 'compatibility.matomo';
+	const SPAM_CHECKER  = 'compatibility.spam_checker';
 
 	public function register( Container $container ) {
 		$container[ self::TEMPLATES ] = function ( Container $container ) {
@@ -41,13 +44,17 @@ class Compatibility extends Provider {
 			$wc_cart = new WC_Cart( $container[ Api::FACTORY ]->cart() );
 			return new Facade( $wc_cart );
 		};
+		
+		$container[ self::SPAM_CHECKER ] = function ( Container $container ) {
+			return new Akismet();
+		};
 
 		add_filter( 'page_template', $this->create_callback( 'page_template_override', function ( $template, $type, $templates ) use ( $container ) {
 			return $container[ self::TEMPLATES ]->override_page_template( $template, $type, $templates );
 		} ), 10, 3 );
 		
 		add_action( 'setup_theme', $this->create_callback( 'woo_compat_functions', function () use ( $container ) {
-			if ( filter_input( INPUT_GET, 'action' ) === 'activate' && filter_input( INPUT_GET, 'plugin' ) === 'woocommerce/woocommerce.php' ) {
+			if ( filter_input( INPUT_GET, 'action', FILTER_SANITIZE_STRING ) === 'activate' && filter_input( INPUT_GET, 'plugin', FILTER_SANITIZE_STRING ) === 'woocommerce/woocommerce.php' ) {
 				return;
 			}
 			include_once( dirname( $container[ 'plugin_file' ] ) . '/src/BigCommerce/Compatibility/woocommerce-functions.php' );
@@ -92,5 +99,21 @@ class Compatibility extends Provider {
 			}
 			return get_option( Login_Page::NAME, 0 );
 		} ), 10, 0 );
+
+		$this->matomo_integration( $container );
+	}
+
+	private function matomo_integration( $container ) {
+		$container[ self::MATOMO ] = function ( Container $container ) {
+			return new Matomo();
+		};
+
+		add_filter( 'bigcommerce/js_config', $this->create_callback( 'compatibility.matomo.js_config', function( $config ) use ( $container ) {
+			if ( class_exists( 'WpMatomo' ) && \WpMatomo::$settings->is_tracking_enabled() ) {
+				return $container[ self::MATOMO ]->js_config( $config );
+			}
+
+			return $config;
+		}), 10, 1 );
 	}
 }

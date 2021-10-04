@@ -263,15 +263,17 @@ a.media-attachment {
   margin-top: 1px; 
 }
 
+/*set the size of the ghost image*/
 div#draggingContainer img {
-	height: 68px !important;
-	width: 68px !important;	
+	height: 25px !important;
+	width: 25px !important;	
 }
 div#draggingContainer {
-	height: 68px !important;
-	width: 68px !important;
+	height: 25px !important;
+	width: 25px !important;
 	overflow: hidden;
 }
+
 
 #new-folder-name {
   width: 224px;
@@ -1177,7 +1179,7 @@ ul#mgmlp-gallery-list li div.attachment-name {
 }
 
 #folder-tree {
-  margin-top: 0;
+  margin-top: 15px;
 }
 
 #ft-panel {

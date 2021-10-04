@@ -27,6 +27,7 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 	const DIAGNOSTICS_NAME = 'bigcommerce_diagnostics_name';
 	const TEXTBOX_NAME     = 'bigcommerce_diagnostics_output';
 	const LOG_ERRORS       = 'bigcommerce_diagnostics_log_import_errors';
+	const SYNC_SITE_URL    = 'bigcommerce_diagnostics_sync_site_url';
 
 	const AJAX_ACTION               = 'bigcommerce_support_data';
 	const AJAX_ACTION_IMPORT_ERRORS = 'bigcommerce_import_errors_log';
@@ -55,11 +56,25 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 			Settings_Screen::NAME
 		);
 
+		add_settings_field(
+			self::SYNC_SITE_URL,
+			esc_html( __( 'Sync Site URL', 'bigcommerce' ) ),
+			[ $this, 'render_sync_site_url', ],
+			Settings_Screen::NAME,
+			self::NAME,
+			[
+				'type'        => 'checkbox',
+				'option'      => self::SYNC_SITE_URL,
+				'label'       => __( 'Sync Site URL', 'bigcommerce' ),
+				'description' => __( 'Manually sync site URL with BigCommerce.', 'bigcommerce' ),
+			]
+		);
+
 		register_setting(
 			Settings_Screen::NAME,
 			self::LOG_ERRORS
 		);
-
+		
 		add_settings_field(
 			self::LOG_ERRORS,
 			esc_html( __( 'Log import errors', 'bigcommerce' ) ),
@@ -69,8 +84,8 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 			[
 				'type'        => 'checkbox',
 				'option'      => self::LOG_ERRORS,
-				'label'       => __( 'Enable Error Logs', 'bigcommerce' ),
-				'description' => __( 'If enabled, will log import error messages to /wp-content/uploads/logs/bigcommerce/debug.log. If you want to use a different path please define BIGCOMMERCE_DEBUG_LOG in your wp-config.php with the desired writeable path.', 'bigcommerce' ),
+				'label'       => esc_html( __( 'Enable Error Logs', 'bigcommerce' ) ),
+				'description' => esc_html( __( 'If enabled, will log import error messages to /wp-content/uploads/logs/bigcommerce/debug.log. If you want to use a different path please define BIGCOMMERCE_DEBUG_LOG in your wp-config.php with the desired writeable path.', 'bigcommerce' ) ),
 			]
 		);
 
@@ -83,12 +98,18 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 			[
 				'type'        => 'text',
 				'option'      => self::DIAGNOSTICS_NAME,
-				'label'       => __( 'Troubleshooting and Diagnostics', 'bigcommerce' ),
-				'description' => __( 'The following is information about your WordPress install that may be helpful information to provide to BigCommerce Customer Support in the event that issues arise and you require help troubleshooting.', 'bigcommerce' ),
+				'label'       => esc_html( __( 'Troubleshooting and Diagnostics', 'bigcommerce' ) ),
+				'description' => esc_html( __( 'The following is information about your WordPress install that may be helpful information to provide to BigCommerce Customer Support in the event that issues arise and you require help troubleshooting.', 'bigcommerce' ) ),
 			]
 		);
 
 
+	}
+
+	public function render_sync_site_url( $args ) {
+		$url  = add_query_arg( [ 'action' => self::SYNC_SITE_URL, '_wpnonce' => wp_create_nonce( self::SYNC_SITE_URL ) ], admin_url( 'admin-post.php' ) );
+		$link = sprintf( '<a href="%s" class="bc-admin-btn">%s</a>', esc_url( $url ), esc_attr( $args[ 'label' ] ) );
+		printf( '%s<p class="description">%s</p>', $link, esc_html( $args[ 'description' ] ) );
 	}
 
 	/**
@@ -111,7 +132,7 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 	public function render_enable_import_errors( $args ) {
 		$value    = (bool) get_option( $args[ 'option' ], false );
 		$checkbox = sprintf( '<label for="%2$s"><input type="%1$s" value="1" class="regular-text code" name="%2$s" id="%2$s" %3$s/> %4$s</label>', esc_attr( $args[ 'type' ] ), esc_attr( $args[ 'option' ] ), checked( true, $value, false ), esc_attr( $args[ 'label' ] ) );
-		printf( '%s<p class="description">%s</p>', $checkbox, __( $args[ 'description' ], 'bigcommerce' ) );
+		printf( '%s<p class="description">%s</p>', $checkbox, esc_html( $args[ 'description' ] ) );
 	}
 
 	/**
@@ -128,6 +149,7 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 
 		$products_total  = wp_count_posts( Product::NAME );
 		$products_amount = $products_total->publish + $products_total->draft;
+		$server_software = filter_input( INPUT_SERVER, 'SERVER_SOFTWARE', FILTER_SANITIZE_STRING );
 		$diagnostics     = [
 			[
 				'label' => __( 'WordPress Installation', 'bigcommerce' ),
@@ -222,7 +244,7 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 					[
 						'label' => __( 'Web Server', 'bigcommerce' ),
 						'key'   => 'webserver',
-						'value' => $_SERVER[ "SERVER_SOFTWARE" ],
+						'value' => $server_software,
 					],
 				],
 			],

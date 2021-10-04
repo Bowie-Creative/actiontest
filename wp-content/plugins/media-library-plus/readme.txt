@@ -2,8 +2,8 @@
 Contributors: maxfoundry, AlanP57
 Tags: WordPress media library folders, media library folders, organize media library
 Requires at least: 4.0
-Tested up to: 5.7.2
-Stable tag: 7.0.0
+Tested up to: 5.8
+Stable tag: 7.0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,13 @@ Users can upload multiple files by using drag and drop. When the Add Files butto
 Because most images and files in the media library have corresponding links embedded in site’s posts and pages, Media Library Folders does not allow folders to be rename or moved in order to prevent breaking these links. Rather, to rename or move a folder, one needs to create a new folder and move the files from the old folder to the new. During the move process, Media Library Folders will scan the sites standard posts and pages for any links matching the old address of the images or files and update them to the new address.
 
 == Changelog ==
+= 7.0.3 =
+* Modified the size and offset of the drag and drop ghost image
+
+= 7.0.2 =
+* Renamed Sort by Name to Sort by Title as the sorting is actually done on the attachment title field
+* Tested with WP 5.8
+
 = 7.0.0 =
 * Updated the Upgrade to Pro page
 

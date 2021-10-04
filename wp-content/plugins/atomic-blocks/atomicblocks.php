@@ -5,7 +5,7 @@
  * Description: A beautiful collection of handy Gutenberg blocks to help you get started with the new WordPress editor.
  * Author: atomicblocks
  * Author URI: http://atomicblocks.com
- * Version: 2.8.3
+ * Version: 2.9.0
  * License: GPL2+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  *
@@ -43,5 +43,5 @@ if ( ! function_exists( 'atomic_blocks_main_plugin_file' ) ) {
 	}
 
 	// Load the rest of the plugin.
-	require_once 'loader.php';
+	require_once plugin_dir_path( __FILE__ ) . 'loader.php';
 }

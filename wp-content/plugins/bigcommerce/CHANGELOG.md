@@ -1,5 +1,336 @@
 # Changelog
 
+## [4.17.1]
+
+### Fixed
+- Fixes an issue with product imports/syncing where the process would fail (504)
+  due to a timeout with `upstream_response_time`. The timeout value was increased to 
+  allow more time to complete the process.
+
+## [4.17.0]
+
+### Changed
+- PHPDoc for cart-footer.php template updated
+
+### Fixed
+- Fixed Product Import logic so `script` and `style` tag contents are not displayed in product description.
+- Fixed `Uncaught ReferenceError: ga is not defined` console error
+- Fixed Wishlist product image thumbnail size
+- Fixed reset password error
+- Fixed low stock notification
+
+## [4.16.0]
+
+### Fixed
+- Fixed styling of hidden product variant radio elements in Twenty Twenty One theme
+- Fixed sub total to exclude tax in cart details
+- Fixed sub total to exclude tax in order history details
+- Fixed CLI importer warnings
+
+
+## [4.15.1]
+
+### Fixed
+- Fixed a fatal error on plugin activation for new installs
+
+
+## [4.15.0]
+
+### Added
+- Added support for partial product import. A dropdown is added next to the Sync Products button with an option to sync only products that have changed since the last sync.
+- Added support for channel status. The plugin will not load on the front-end if the channel status is anything other than `active`. Admin area will load but the product import will be allowed only for `active` and `inactive` status.
+
+### Changed
+- Updated "Add to Cart" JavaScript functions to use `[data-js="bc-cart-item-count"]` selector instead of `.bigcommerce-cart__item-count`.
+
+### Fixed
+- Fixed product page 404 error for logged in user. WP Forum: https://wordpress.org/support/topic/product-page-404-error-for-logged-in-user/
+
+
+## [4.14.1]
+
+### Fixed
+- Fixed the product template include logic for WordPress 5.8
+- Fixed bug introduced in WordPress 5.8 that prevents WordPress Customizer from reacting when changes were made to the Product Catalog "Sort By" options.
+- Updates add to cart functionality to wait for creation of cart, so multiple add to carts function properly.  Fix for: https://github.com/bigcommerce/bigcommerce-for-wordpress/issues/230
+
+
+## [4.14.0]
+
+### Fixed
+- Fixed Product Form > Option Description escaping logic so `<strong>` tags render properly.
+- Fixed login redirect_to query argument not being respected. This happened for admin users in the case when confirm admin email action was in progress. Other user roles were not affected.
+- Fixed Admin/Users reset password link
+- Fixed cart footer template description and bumped the template version (related github issue: https://github.com/bigcommerce/bigcommerce-for-wordpress/issues/275)
+- Fixed javascript error should the pricing API error out (related github issues: https://github.com/bigcommerce/bigcommerce-for-wordpress/issues/226 https://github.com/bigcommerce/bigcommerce-for-wordpress/issues/231)
+
+
+## [4.13.0]
+
+### Added
+
+- Added support for password reset for users that exist only on BC (not yet synced with WP)
+- Delete all channels from the WP database on plugin uninstall so a fresh channel list is pulled when reinstalling and connecting to a new store
+- Added support for changing the SKU element when selecting variants. This adds a wrapper
+  around the SKU value where JS targets the wrapper and updates the text.
+
+  **NOTE:** Update your templates accordingly. *product-sku.php*
+
+### Changed
+- Within Embedded Checkout, logging out using the EC sign out buttonnow triggers
+  a callback to log the user out of wordpress as well via `wp_logout()`
+
+- The SKU text now updates after changing options on a product.
+
+  **NOTE: product-sku.php template updated to v.1.1.0**
+
+### Fixed
+
+- Fixed background colors in 2021 theme
+- Fixed banner overlaps the mobile menu icon on 2021 theme
+- Fixed top/bottom banners set for WordPress Twenty-Seventeen theme not showing up on home page.
+
+
+## [4.12.0]
+
+### Added
+
+- Support for fetching products by SKU via query and shortcode.
+
+- Added "Product Sync Log" section to the Settings > Diagnostics panel in the
+  WP Admin. This shows the last 10 sync attempts and their result.
+
+- Added support for Banners via the [Banners API](https://developer.bigcommerce.com/api-reference/store-management/marketing/banners) to import and use custom banners from the BC store
+  within your WordPress site.
+
+### Changed
+
+- Updated gallery thumbnail active slide functionality when triggering SKU specific images.
+
+- Updated "Checkout Complete" page assignment in Settings. Allows for any page to be used,
+  as the checkout complete page.
+
+### Fixed
+
+
+## [4.11.0]
+
+### Added
+- Added support for a generic Segment tracking event on order completion via Embedded Checkout.
+- Added Customizer option and cart functionality to process coupon/promo codes.
+
+### Changed
+- Optimized Brand and Category import. (Less time to import by skipping terms that did not change)
+
+### Fixed
+- Addressed issues with the Shipping Calculator not properly accommodating
+  Free and Ship by Weight/Total options.
+- Fixed CLI importer warnings
+
+
+## [4.10.0]
+
+### Added
+- Added styles for Twenty Twenty One theme. Expanding the default content area width. Added button styles, link styles, colors and updating CSS variables.
+- Added support for global customer login, with a default of on for all new installs and channels, and the ability to turn on for existing channels
+- Added template and route for Checkout Completion to better support checkout processes utilizing a hosted payment processor with redirection
+
+### Fixed
+- Fixed Onboarding Settings not showing the correct list of channels
+- Fixed Shipping Calculator enable/disable toggle in the Customizer (Github issues:https://github.com/bigcommerce/bigcommerce-for-wordpress/issues/243, https://github.com/bigcommerce/bigcommerce-for-wordpress/issues/244)
+
+
+## [4.9.0]
+
+### Added
+- Added support for Product Category images
+- Added additional error message when attempting to create a channel with an existing name
+
+
+## [4.8.0]
+
+### Fixed
+- Addresses an issue with the Choices JS library breaking the term selection in
+  the WP admin Product Selector UI.
+- Fixed greyed out Embedded Checkout option in the settings even if site is ssl configured
+
+
+## [4.7.0]
+
+### Added
+- Added a proxy server endpoint to add multiple products to the cart in a single request
+- Added support for Gift Certificate themes drop-down
+
+### Fixed
+- Fixed an erorr when printing a failed import time message in the Settings panel
+
+
+## [4.6.0]
+
+### Added
+- Added time zone for import times in Settings > Product Sync
+
+### Fixed
+- Addressed an issue where missing template markup on custom template overrides
+  caused a JS error on the page rendering the rest of the page unusable.
+
+  **Note:** Where possible, please use all require markup outlined in the templates.
+
+
+## [4.5.1]
+
+### Fixed
+- Fixed product category slug changes when re-importing a term that overlaps
+  with a term with a different parent.
+
+
+## [4.5.0]
+
+### Added
+- Added shipping estimation calculator to the cart page as well as
+  option to enable/disable this feature in the WordPress Customizer.
+
+### Changed
+- Changed how Quick View triggers detect their corresponding modal container.
+  This change allows more flexibility in terms of where a Quick View button can be
+  placed in a product card.
+
+
+## [4.4.0]
+
+### Added
+- Added a new customizer option to hide search bar from product archive
+- Added ability to embed iframe in Product description
+- Added option to never sync products
+- Added new sort options on Product Archive: by SKU and by Inventory Count
+
+
+## [4.3.1]
+
+### Fixed
+- Fixed product duplication on import and single product front-end visibility when default customer group is not set in BC settings
+- Fixed an issue with Quick View buttons/modals not triggering their respective Quick View dialog when multiple product
+  grids are on the same page.
+
+
+## [4.3.0]
+
+### Added
+- Added required additional onboarding step for setting a Checkout URL
+- Allow img tag in product custom fields
+
+### Fixed
+- Fixed add new product component block error
+- Fixed HTML in Settings helptext
+- Visible on storefront BC setting not reflected in WP
+- Fixed front-end exception if channel is not set
+
+
+## [4.2.0]
+
+### Added
+- Added Checkout URL documentation link in Settings
+
+### Changed
+- Updated product quick view modal to work after ajax refresh
+
+
+## [4.1.0]
+
+### Added
+- Added in support for variant inventories
+- Added version check to the plugin loader so that the plugin is running only if the minimum version is met
+- Integrated support for Akismet spam gateway for account sign ups
+
+### Changed
+- Updated list styles in catalog pages
+- Changed share wishlist functionality to copy wishlist link
+- Updated tax label
+- Added validation for presence of Shortcode for registered BC pages
+
+### Fixed
+- Category description is now properly rendering images uploaded in the BC admin
+
+
+## [4.0.0]
+
+### Added
+- Added support for Matomo analytics plugin utilizing the events for: `setCustomVariable`, `addEcommerceItem`,
+  and `setEcommerceView` events.
+
+### Changed
+- Minimum supported WordPress version increased to 5.2
+- Minimum supported PHP version increased to 7.2
+- Reviews will no longer be imported as part of the primary import process.
+  A separate cron job will cache a single page of reviews in post meta for
+  each product. Subsequent pages will be queried directly from the BigCommerce
+  API when visitors request to view them.
+- `\BigCommerce\Post_Types\Product\Product::get_reviews()` will only return
+  the cached collection of reviews (usually 12 or fewer). Options to sort
+  reviews are no longer recognized.
+- `\BigCommerce\Import\Importers\Reviews\Review_Builder` has moved to
+  `\BigCommerce\Reviews\Review_Builder`.
+- `\BigCommerce\Import\Importers\Reviews\Review_Fetcher` has moved to
+  `\BigCommerce\Review\Review_Fetcher`. The `$product_id` parameter has moved
+  from the constructor to the `fetch()` method.
+- Updated templates to handle ajax loading of the initial page of reviews. Affected
+  templates are `review-list.php` and `review-list-pagination.php`.
+
+### Removed
+- Removed the `bc_reviews` table. All queries that used this table have been
+  updated to use post meta or query the BigCommerce API.
+- `\BigCommerce\Post_Types\Product\Product::get_review_count()` will return
+  the count of approved reviews. The `$status` parameter has been removed.
+- Remove the abstract class `\BigCommerce\Import\Importers\Record_Builder`.
+  The functionality that was shared by subclasses is available through the
+  trait `\BigCommerce\Api\Api_Data_Sanitizer`.
+- Deprecated classes, methods, and variables from prior versions of the plugin
+  have been removed according to schedule.
+
+### Deprecated
+- `\BigCommerce\Schema\Reviews_Table` has been deprecated and will be removed
+  in version 5.0. Its only remaining functionality is to remove the now-unused
+  table from the database.
+
+## [3.22.0]
+
+### Added
+- Segment support for cross-domain analytics with Google Analytics. It enables the
+  `autoLinker` plugin feature for GA.
+- Enforce BigCommerce password requirements when registering new customers
+- Display category description on product category pages
+
+### Changed
+- Data Sanitization/Escaping code refactor for WPVIP compliance
+
+## [3.21.0]
+
+### Added
+- Added manual site URL sync option in the Diagnostics panel
+
+### Changed
+- Modified admin import timeout message
+- Update checkout SDK to 1.79.0
+
+### Fixed
+- Fixed Best Selling sort on Product archive page
+- Fixed category sort not being reflected in the menu
+
+
+## [3.20.0]
+
+### Changed
+- Link to BigCommerce HTTPS settings from Embedded Checkout settings tab.
+
+
+### Fixed
+
+- Fixed an issue with product grids where Ajax to cart is enabled but no simple products are on the page. This would
+  cause the Add to Cart button on Quick View to redirect to the cart page instead of an ajax submission.
+
+- Fixed Google SiteKit plugin breaking Settings page.
+
+
 ## [3.19.0]
 
 ### Added
@@ -8,7 +339,7 @@
 
 ### Fixed
 
-- Featured and regular product sort order reflect order in BC store 
+- Featured and regular product sort order reflect order in BC store
 
 
 ## [3.18.1]
@@ -22,7 +353,7 @@
 
 ### Added
 
-- Added support for new larger image size and zoom features on the PDP in multiple 
+- Added support for new larger image size and zoom features on the PDP in multiple
   supported WordPress themes.
 - Added version numbers to templates. Diagnostics panel will now check major versions of overridden files.
 - Support for Flatsome theme added starting with version 3.10.1 of the theme.
@@ -1179,6 +1510,31 @@
   in fact, reset postdata, so far as Gutenberg 3.2.0 is concerned.
 
 
+[4.17.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.16.0...4.17.0
+[4.16.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.15.1...4.16.0
+[4.15.1]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.15.0...4.15.1
+[4.15.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.14.1...4.15.0
+[4.14.1]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.14.0...4.14.1
+[4.14.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.13.0...4.14.0
+[4.13.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.12.0...4.13.0
+[4.12.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.11.0...4.12.0
+[4.11.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.10.0...4.11.0
+[4.10.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.9.0...4.10.0
+[4.9.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.8.0...4.9.0
+[4.8.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.7.0...4.8.0
+[4.7.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.6.0...4.7.0
+[4.6.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.5.1...4.6.0
+[4.5.1]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.5.0...4.5.1
+[4.5.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.4.0...4.5.0
+[4.4.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.3.1...4.4.0
+[4.3.1]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.3.0...4.3.1
+[4.3.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.2.0...4.3.0
+[4.2.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.1.0...4.2.0
+[4.1.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/4.0.0...4.1.0
+[4.0.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/3.22.0...4.0.0
+[3.22.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/3.21.0...3.22.0
+[3.21.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/3.20.0...3.21.0
+[3.20.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/3.19.0...3.20.0
 [3.19.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/3.18.1...3.19.0
 [3.18.1]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/3.18.0...3.18.1
 [3.18.0]: https://github.com/bigcommerce/bigcommerce-for-wordpress/compare/3.17.0...3.18.0

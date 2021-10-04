@@ -10,6 +10,8 @@ import * as tools from 'utils/tools';
 import { trigger } from 'utils/events';
 import { wpAPIAddToCartAjax } from 'utils/ajax';
 import { CART_API_BASE, AJAX_CART_ENABLED, AJAX_CART_NONCE } from 'publicConfig/wp-settings';
+import { CART_ID_COOKIE_NAME } from 'bcConstants/cookies';
+import { AJAX_CART_UPDATE } from 'bcConstants/events';
 import { NLS } from 'publicConfig/i18n';
 import { cartMenuSet, updateFlatsomeCartMenuQty, updateFlatsomeCartMenuPrice } from './cart-menu-item';
 
@@ -23,10 +25,6 @@ const state = {
 		quantity: 1,
 	},
 	cartMessage: '',
-};
-
-const el = {
-	buttons: tools.getNodes('.bc-btn--add_to_cart', true, document, true),
 };
 
 /**
@@ -119,7 +117,7 @@ const getAjaxQueryString = (button) => {
  * @param data
  */
 const updateCartItemCount = (data = {}) => {
-	const menuCartCount = tools.getNodes('.bigcommerce-cart__item-count', false, document, true)[0];
+	const menuCartCount = tools.getNodes('bc-cart-item-count')[0];
 	if (!menuCartCount) {
 		return;
 	}
@@ -171,6 +169,8 @@ const createAjaxResponseMessage = (wrapper = '', message = '', error = false) =>
  */
 const handleFetchingState = (button = '') => {
 	if (!button) {
+		const allCartButtons = tools.getNodes('.bc-btn--add_to_cart', true, document, true);
+		allCartButtons.forEach(handleFetchingState);
 		return;
 	}
 
@@ -226,16 +226,16 @@ const handleAjaxAddToCartRequest = (e) => {
 		return;
 	}
 
-	const cartID = Cookie.get('bigcommerce_cart_id');
+	const cartID = Cookie.get(CART_ID_COOKIE_NAME);
 	const url = cartID ? `${CART_API_BASE}/${cartID}` : CART_API_BASE;
 	const query = getAjaxQueryString(cartButton);
 
-	handleFetchingState(cartButton);
+	handleFetchingState(cartID ? cartButton : null);
 	wpAPIAddToCartAjax(url, query)
 		.set('X-WP-Nonce', AJAX_CART_NONCE)
 		.end((err, res) => {
 			state.isFetching = false;
-			handleFetchingState(cartButton);
+			handleFetchingState(cartID ? cartButton : null);
 
 			if (err) {
 				console.error(err);
@@ -248,7 +248,8 @@ const handleAjaxAddToCartRequest = (e) => {
 			updateCartItemCount(res.body);
 			updateFlatsomeCartMenuQty();
 			updateFlatsomeCartMenuPrice(res.body);
-			trigger({ event: 'bigcommerce/update_mini_cart', native: false });
+			trigger({ event: AJAX_CART_UPDATE, native: false });
+			trigger({ event: 'bigcommerce/analytics_trigger', data: { cartButton, cartID: res.body.cart_id }, native: false });
 		});
 };
 
@@ -257,7 +258,7 @@ const bindEvents = () => {
 };
 
 const init = () => {
-	if (!state.ajax_enabled || el.buttons.length === 0) {
+	if (!state.ajax_enabled) {
 		return;
 	}
 

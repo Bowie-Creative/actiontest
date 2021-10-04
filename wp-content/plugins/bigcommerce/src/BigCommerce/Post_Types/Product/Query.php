@@ -56,7 +56,7 @@ class Query {
 					break;
 				case Product_Archive::SORT_FEATURED:
 					// Product 'featured' tag in BC store has no effect on sorting
-					$query->set( 'orderby', [ 'menu_order' => 'ASC', 'title' => 'ASC', 'date' => 'DESC' ] );
+					$query->set( 'orderby', [ 'menu_order' => 'ASC', 'date' => 'DESC', 'title' => 'ASC' ] );
 					break;
 				case Product_Archive::SORT_PRICE_ASC:
 					$meta_query = $query->get( 'meta_query' ) ?: [];
@@ -96,9 +96,16 @@ class Query {
 					$meta_query['bigcommerce_sales'] = [
 						'key'     => Product::SALES_META_KEY,
 						'compare' => 'EXISTS',
+						'type'    => 'NUMERIC'
 					];
+					
+					$meta_query['bigcommerce_id'] = [
+						'key'  => Product::BIGCOMMERCE_ID,
+						'type' => 'NUMERIC'
+					];
+
 					$query->set( 'meta_query', $meta_query );
-					$query->set( 'orderby', [ 'bigcommerce_sales' => 'DESC', 'title' => 'ASC' ] );
+					$query->set( 'orderby', [ 'bigcommerce_sales' => 'DESC', 'bigcommerce_id' => 'DESC' ] );
 					break;
 				case 'bigcommerce_id__in':
 					$meta_query                   = $query->get( 'meta_query' ) ?: [];
@@ -120,6 +127,37 @@ class Query {
 						return "FIELD({$alias}.meta_value," . implode( ',', array_map( 'absint', $query->query_vars['bigcommerce_id__in'] ) ) . ')';
 					};
 					add_filter( 'posts_orderby', $orderby_filter, 10, 2 );
+					break;
+					
+				case Product_Archive::SORT_INVENTORY_COUNT:
+					$meta_query = $query->get( 'meta_query' ) ?: [];
+
+					$meta_query['bigcommerce_inventory_level'] = [
+						'key'     => Product::INVENTORY_META_KEY,
+						'compare' => 'EXISTS',
+						'type'    => 'NUMERIC'
+					];
+
+					$meta_query['bigcommerce_id'] = [
+						'key'  => Product::BIGCOMMERCE_ID,
+						'type' => 'NUMERIC'
+					];
+
+					$query->set( 'meta_query', $meta_query );
+					$query->set( 'orderby', [ 'bigcommerce_inventory_level' => 'DESC', 'bigcommerce_id' => 'DESC' ] );
+					break;
+					
+				case Product_Archive::SORT_SKU:
+					$meta_query = $query->get( 'meta_query' ) ?: [];
+
+					$meta_query['bigcommerce_sku_normalized'] = [
+						'key'     => Product::SKU_NORMALIZED,
+						'compare' => 'EXISTS',
+					];
+
+					$query->set( 'meta_query', $meta_query );
+					$query->set( 'orderby', [ 'bigcommerce_sku_normalized' => 'ASC'] );
+
 					break;
 				default:
 					do_action( 'bigcommerce/query/sort', $query );

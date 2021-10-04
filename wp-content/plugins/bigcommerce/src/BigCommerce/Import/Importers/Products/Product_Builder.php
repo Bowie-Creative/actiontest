@@ -4,17 +4,17 @@
 namespace BigCommerce\Import\Importers\Products;
 
 
-use BigCommerce\Api\v3\ApiException;
+use BigCommerce\Api\Api_Data_Sanitizer;
 use BigCommerce\Api\v3\Api\CatalogApi;
+use BigCommerce\Api\v3\ApiException;
 use BigCommerce\Api\v3\Model;
 use BigCommerce\Api\v3\Model\Modifier;
 use BigCommerce\Api\v3\Model\ProductImage;
 use BigCommerce\Api\v3\ObjectSerializer;
 use BigCommerce\Import\Image_Importer;
+use BigCommerce\Import\Import_Strategy;
 use BigCommerce\Import\Mappers\Brand_Mapper;
 use BigCommerce\Import\Mappers\Product_Category_Mapper;
-use BigCommerce\Import\Importers\Record_Builder;
-use BigCommerce\Import\Import_Strategy;
 use BigCommerce\Post_Types\Product\Product;
 use BigCommerce\Taxonomies\Availability\Availability;
 use BigCommerce\Taxonomies\Brand\Brand;
@@ -24,7 +24,9 @@ use BigCommerce\Taxonomies\Flag\Flag;
 use BigCommerce\Taxonomies\Product_Category\Product_Category;
 use BigCommerce\Taxonomies\Product_Type\Product_Type;
 
-class Product_Builder extends Record_Builder {
+class Product_Builder {
+	use Api_Data_Sanitizer;
+
 	/**
 	 * @var Model\Product
 	 */
@@ -89,7 +91,14 @@ class Product_Builder extends Record_Builder {
 	}
 
 	private function sanitize_content( $content ) {
-		return wp_kses_post( $content );
+		/**
+		 * Remove contents of `script` and `style` tags.
+		 * @see https://developer.wordpress.org/reference/functions/wp_strip_all_tags/
+		 */
+		$content = preg_replace( '@<(script|style)[^>]*?>.*?</\\1>@si', '', $content );
+		$content = html_entity_decode( $content );
+
+		return wp_kses( $content, 'bigcommerce/product_description' );
 	}
 
 	private function get_post_slug() {
@@ -117,6 +126,10 @@ class Product_Builder extends Record_Builder {
 			}
 		} catch ( ApiException $e ) {
 			// presume that there are no modifiers
+		}
+
+		if ( ! $this->product->getIsVisible() ) {
+			return 'draft';
 		}
 
 		$state = $this->listing->getState();
@@ -383,7 +396,10 @@ class Product_Builder extends Record_Builder {
 		$meta[ Product::IMPORTER_VERSION_META_KEY ] = Import_Strategy::VERSION;
 		$meta[ Product::BIGCOMMERCE_ID ]            = $this->sanitize_int( $this->product['id'] );
 		$meta[ Product::SKU ]                       = $this->sanitize_string( $this->product['sku'] );
+		$meta[ Product::SKU_NORMALIZED ]            = $this->normalize_sku( $this->product['sku'] );
 		$meta[ Product::RATING_META_KEY ]           = $this->get_avg_rating();
+		$meta[ Product::REVIEW_COUNT_META_KEY ]     = $this->sanitize_int( $this->product[ 'reviews_rating_sum' ] );
+		$meta[ Product::RATING_SUM_META_KEY ]       = $this->sanitize_int( $this->product[ 'reviews_count' ] );
 		$meta[ Product::SALES_META_KEY ]            = $this->sanitize_int( $this->product['total_sold'] );
 		$meta[ Product::PRICE_META_KEY ]            = $this->sanitize_double( $this->product['calculated_price'] );
 		$meta[ Product::INVENTORY_META_KEY ]        = $this->sanitize_int( $this->product['inventory_level'] );
@@ -391,6 +407,76 @@ class Product_Builder extends Record_Builder {
 		$meta[ Product::DATA_HASH_META_KEY ]        = self::hash( $this->product, $this->listing );
 
 		return $meta;
+	}
+
+	private function normalize_sku( $sku ) {
+		$num_of_characters = apply_filters( 'bigcommerce/sku/normalized/segment/num_of_characters', 10 );
+		if ( empty( $sku ) ) {
+			return apply_filters( 'bigcommerce/sku/normalized/empty', str_repeat( 'z', $num_of_characters ) );
+		}
+
+		return apply_filters( 'bigcommerce/sku/normalized', $this->normalize_sku_segments( $this->segment_sku( $sku ), $num_of_characters ), $sku );
+	}
+
+	/**
+	 * Segment SKU by type (num, alpha)
+	 *
+	 * @param string $sku
+	 * @return array
+	 */
+	private function segment_sku( $sku ) {
+		$sku = preg_replace( "/[^A-Za-z0-9 ]/", '', $sku );
+
+		// Group characters by type
+		$previous_type = 'alpha';
+		$segments = [[]];
+		foreach ( str_split( $sku ) as $char ) {
+			end( $segments );
+			$key = key( $segments );
+
+			$current_type = 'num';
+
+			if ( ctype_alpha( $char ) ) {
+				$current_type = 'alpha';
+			}
+
+			if ( $current_type !== $previous_type ) {
+				$key++;
+				$segments[ $key ] = [];
+			}
+			$segments[ $key ][] = $char;
+
+			$previous_type = $current_type;
+		}
+
+		// Flatten segments
+		return array_filter( array_map( function( $segment ) {
+			return implode( '', $segment );
+		}, $segments ) );
+	}
+
+	/**
+	 * Pad sku segments with 0
+	 *
+	 * Numbers are padded left, alpha right
+	 * 12345 -> 00000123245
+	 * aabcc -> aabcc00000
+	 * 12345aabcc -> 00000123245-aabcc00000
+	 *
+	 * @param array $segments
+	 * @param int $num_of_characters
+	 * @return string
+	 */
+	private function normalize_sku_segments( $segments, $num_of_characters ) {
+		$segments = array_map( function( $segment ) use ( $num_of_characters ) {
+			$pad_type = STR_PAD_LEFT;
+			if ( ctype_alpha( $segment[0] ) ) {
+				$pad_type = STR_PAD_RIGHT;
+			}
+			return str_pad( $segment, $num_of_characters, '0', $pad_type );
+		}, $segments );
+
+		return implode( '-', $segments );
 	}
 
 	private function get_avg_rating() {
@@ -424,12 +510,12 @@ class Product_Builder extends Record_Builder {
 
 		$ranges = [
 			'price'      => [
-				'max' => max( $prices ),
-				'min' => min( $prices ),
+				'max' => ! empty( $prices ) ? max( $prices ) : 0,
+				'min' => ! empty( $prices ) ? min( $prices ) : 0,
 			],
 			'calculated' => [
-				'max' => max( $calculated ),
-				'min' => min( $calculated ),
+				'max' => ! empty( $calculated ) ? max( $calculated ) : 0,
+				'min' => ! empty( $calculated ) ? min( $calculated ) : 0,
 			],
 		];
 
@@ -437,8 +523,8 @@ class Product_Builder extends Record_Builder {
 	}
 
 	public static function hash( Model\Product $product, Model\Listing $listing ) {
-		$product_string = json_encode( ObjectSerializer::sanitizeForSerialization( $product ) );
-		$listing_string = json_encode( ObjectSerializer::sanitizeForSerialization( $listing ) );
+		$product_string = wp_json_encode( ObjectSerializer::sanitizeForSerialization( $product ) );
+		$listing_string = wp_json_encode( ObjectSerializer::sanitizeForSerialization( $listing ) );
 		return md5( $product_string . $listing_string );
 	}
 }

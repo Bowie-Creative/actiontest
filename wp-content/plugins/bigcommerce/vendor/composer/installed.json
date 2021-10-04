@@ -57,26 +57,29 @@
     },
     {
         "name": "firebase/php-jwt",
-        "version": "v5.0.0",
-        "version_normalized": "5.0.0.0",
+        "version": "v5.4.0",
+        "version_normalized": "5.4.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/firebase/php-jwt.git",
-            "reference": "9984a4d3a32ae7673d6971ea00bae9d0a1abba0e"
+            "reference": "d2113d9b2e0e349796e72d2a63cf9319100382d2"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/firebase/php-jwt/zipball/9984a4d3a32ae7673d6971ea00bae9d0a1abba0e",
-            "reference": "9984a4d3a32ae7673d6971ea00bae9d0a1abba0e",
+            "url": "https://api.github.com/repos/firebase/php-jwt/zipball/d2113d9b2e0e349796e72d2a63cf9319100382d2",
+            "reference": "d2113d9b2e0e349796e72d2a63cf9319100382d2",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
         "require-dev": {
-            "phpunit/phpunit": " 4.8.35"
+            "phpunit/phpunit": ">=4.8 <=9"
         },
-        "time": "2017-06-27T22:17:23+00:00",
+        "suggest": {
+            "paragonie/sodium_compat": "Support EdDSA (Ed25519) signatures when libsodium is not present"
+        },
+        "time": "2021-06-23T19:00:23+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -101,21 +104,25 @@
             }
         ],
         "description": "A simple library to encode and decode JSON Web Tokens (JWT) in PHP. Should conform to the current spec.",
-        "homepage": "https://github.com/firebase/php-jwt"
+        "homepage": "https://github.com/firebase/php-jwt",
+        "keywords": [
+            "jwt",
+            "php"
+        ]
     },
     {
         "name": "moderntribe/bigcommerce-api-php-v3",
-        "version": "v2.0.3",
-        "version_normalized": "2.0.3.0",
+        "version": "v2.2.0",
+        "version_normalized": "2.2.0.0",
         "source": {
             "type": "git",
             "url": "git@github.com:moderntribe/bigcommerce-api-php-v3.git",
-            "reference": "cb1d50d17b670e5aeb55c062f90aecd36fb0651f"
+            "reference": "ea526c88b2d87759803ec718c6f7027e4640adc0"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/moderntribe/bigcommerce-api-php-v3/zipball/cb1d50d17b670e5aeb55c062f90aecd36fb0651f",
-            "reference": "cb1d50d17b670e5aeb55c062f90aecd36fb0651f",
+            "url": "https://api.github.com/repos/moderntribe/bigcommerce-api-php-v3/zipball/ea526c88b2d87759803ec718c6f7027e4640adc0",
+            "reference": "ea526c88b2d87759803ec718c6f7027e4640adc0",
             "shasum": ""
         },
         "require": {
@@ -129,7 +136,7 @@
             "satooshi/php-coveralls": "~1.0",
             "squizlabs/php_codesniffer": "~2.6"
         },
-        "time": "2019-10-22T13:41:33+00:00",
+        "time": "2021-07-19T11:46:49+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -241,17 +248,17 @@
     },
     {
         "name": "paragonie/random_compat",
-        "version": "v2.0.18",
-        "version_normalized": "2.0.18.0",
+        "version": "v2.0.20",
+        "version_normalized": "2.0.20.0",
         "source": {
             "type": "git",
             "url": "https://github.com/paragonie/random_compat.git",
-            "reference": "0a58ef6e3146256cc3dc7cc393927bcc7d1b72db"
+            "reference": "0f1f60250fccffeaf5dda91eea1c018aed1adc2a"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/paragonie/random_compat/zipball/0a58ef6e3146256cc3dc7cc393927bcc7d1b72db",
-            "reference": "0a58ef6e3146256cc3dc7cc393927bcc7d1b72db",
+            "url": "https://api.github.com/repos/paragonie/random_compat/zipball/0f1f60250fccffeaf5dda91eea1c018aed1adc2a",
+            "reference": "0f1f60250fccffeaf5dda91eea1c018aed1adc2a",
             "shasum": ""
         },
         "require": {
@@ -263,7 +270,7 @@
         "suggest": {
             "ext-libsodium": "Provides a modern crypto API that can be used to generate random bytes."
         },
-        "time": "2019-01-03T20:59:08+00:00",
+        "time": "2021-04-17T09:33:01+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -395,27 +402,27 @@
     },
     {
         "name": "psr/log",
-        "version": "1.1.0",
-        "version_normalized": "1.1.0.0",
+        "version": "1.1.4",
+        "version_normalized": "1.1.4.0",
         "source": {
             "type": "git",
             "url": "https://github.com/php-fig/log.git",
-            "reference": "6c001f1daafa3a3ac1d8ff69ee4db8e799a654dd"
+            "reference": "d49695b909c3b7628b6289db5479a1c204601f11"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/php-fig/log/zipball/6c001f1daafa3a3ac1d8ff69ee4db8e799a654dd",
-            "reference": "6c001f1daafa3a3ac1d8ff69ee4db8e799a654dd",
+            "url": "https://api.github.com/repos/php-fig/log/zipball/d49695b909c3b7628b6289db5479a1c204601f11",
+            "reference": "d49695b909c3b7628b6289db5479a1c204601f11",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2018-11-20T15:27:04+00:00",
+        "time": "2021-05-03T11:20:27+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
-                "dev-master": "1.0.x-dev"
+                "dev-master": "1.1.x-dev"
             }
         },
         "installation-source": "dist",
@@ -431,7 +438,7 @@
         "authors": [
             {
                 "name": "PHP-FIG",
-                "homepage": "http://www.php-fig.org/"
+                "homepage": "https://www.php-fig.org/"
             }
         ],
         "description": "Common interface for logging libraries",

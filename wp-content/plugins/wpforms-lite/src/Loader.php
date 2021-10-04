@@ -12,9 +12,11 @@ class Loader {
 	/**
 	 * Classes to register.
 	 *
+	 * @since 1.5.8
+	 *
 	 * @var array
 	 */
-	private $classes = array();
+	private $classes = [];
 
 	/**
 	 * Loader init.
@@ -36,9 +38,32 @@ class Loader {
 	protected function populate_classes() {
 
 		$this->populate_admin();
+		$this->populate_builder();
 		$this->populate_migrations();
 		$this->populate_capabilities();
 		$this->populate_tasks();
+		$this->populate_forms();
+		$this->populate_smart_tags();
+		$this->populate_logger();
+		$this->populate_education();
+	}
+
+	/**
+	 * Populate the Forms related classes.
+	 *
+	 * @since 1.6.2
+	 */
+	private function populate_forms() {
+
+		$this->classes[] = [
+			'name' => 'Forms\Token',
+			'id'   => 'token',
+		];
+
+		$this->classes[] = [
+			'name' => 'Forms\Honeypot',
+			'id'   => 'honeypot',
+		];
 	}
 
 	/**
@@ -51,7 +76,20 @@ class Loader {
 		array_push(
 			$this->classes,
 			[
+				'name' => 'Admin\Notice',
+				'id'   => 'notice',
+			],
+			[
+				'name' => 'Admin\Addons\AddonsCache',
+				'id'   => 'addons_cache',
+			],
+			[
+				'name' => 'Admin\Addons\Addons',
+				'id'   => 'addons',
+			],
+			[
 				'name' => 'Admin\AdminBarMenu',
+				'hook' => 'init',
 			],
 			[
 				'name' => 'Admin\Notifications',
@@ -61,6 +99,63 @@ class Loader {
 				'name' => 'Admin\Entries\Edit',
 				'id'   => 'entries_edit',
 				'hook' => 'admin_init',
+			],
+			[
+				'name' => 'Admin\Entries\Export\Export',
+			],
+			[
+				'name' => 'Admin\Challenge',
+				'id'   => 'challenge',
+			],
+			[
+				'name' => 'Admin\FormEmbedWizard',
+				'hook' => 'admin_init',
+			],
+			[
+				'name' => 'Admin\SiteHealth',
+			],
+			[
+				'name' => 'Admin\Settings\Captcha',
+				'hook' => 'admin_init',
+			],
+			[
+				'name' => 'Admin\Tools\Tools',
+				'hook' => 'admin_init',
+			],
+			[
+				'name' => 'Admin\Pages\Addons',
+				'id'   => 'addons_page',
+			]
+		);
+	}
+
+	/**
+	 * Populate Form Builder related classes.
+	 *
+	 * @since 1.6.8
+	 */
+	private function populate_builder() {
+
+		array_push(
+			$this->classes,
+			[
+				'name' => 'Admin\Builder\Help',
+				'id'   => 'builder_help',
+			],
+			[
+				'name' => 'Admin\Builder\Shortcuts',
+			],
+			[
+				'name' => 'Admin\Builder\TemplatesCache',
+				'id'   => 'builder_templates_cache',
+			],
+			[
+				'name' => 'Admin\Builder\TemplateSingleCache',
+				'id'   => 'builder_template_single',
+			],
+			[
+				'name' => 'Admin\Builder\Templates',
+				'id'   => 'builder_templates',
 			]
 		);
 	}
@@ -123,5 +218,92 @@ class Loader {
 				'run'  => false,
 			]
 		);
+	}
+
+	/**
+	 * Populate smart tags loaded classes.
+	 *
+	 * @since 1.6.7
+	 */
+	private function populate_smart_tags() {
+
+		array_push(
+			$this->classes,
+			[
+				'name' => 'SmartTags\SmartTags',
+				'id'   => 'smart_tags',
+				'run'  => 'hooks',
+			]
+		);
+	}
+
+	/**
+	 * Populate logger loaded classes.
+	 *
+	 * @since 1.6.3
+	 */
+	private function populate_logger() {
+
+		array_push(
+			$this->classes,
+			[
+				'name' => 'Logger\Log',
+				'id'   => 'log',
+				'hook' => false,
+				'run'  => 'hooks',
+			]
+		);
+	}
+
+	/**
+	 * Populate education related classes.
+	 *
+	 * @since 1.6.6
+	 */
+	private function populate_education() {
+
+		// Kill switch.
+		if ( ! (bool) apply_filters( 'wpforms_admin_education', true ) ) {
+			return;
+		}
+
+		// Education core classes.
+		array_push(
+			$this->classes,
+			[
+				'name' => 'Admin\Education\Core',
+				'id'   => 'education',
+			],
+			[
+				'name' => 'Admin\Education\Fields',
+				'id'   => 'education_fields',
+			]
+		);
+
+		// Education features classes.
+		$features = [
+			'Builder\Captcha',
+			'Builder\Fields',
+			'Builder\Settings',
+			'Builder\Providers',
+			'Builder\Payments',
+			'Builder\DidYouKnow',
+			'Builder\Geolocation',
+			'Builder\Confirmations',
+			'Admin\DidYouKnow',
+			'Admin\Settings\Integrations',
+			'Admin\Settings\Geolocation',
+			'Admin\NoticeBar',
+			'Admin\Entries\Geolocation',
+		];
+
+		foreach ( $features as $feature ) {
+			array_push(
+				$this->classes,
+				[
+					'name' => 'Admin\Education\\' . $feature,
+				]
+			);
+		}
 	}
 }

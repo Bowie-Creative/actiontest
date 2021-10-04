@@ -25,6 +25,7 @@ use BigCommerce\Taxonomies\Condition\Condition;
 use BigCommerce\Taxonomies\Flag\Flag;
 use BigCommerce\Taxonomies\Product_Category\Product_Category;
 use BigCommerce\Taxonomies\Product_Type\Product_Type;
+use BigCommerce\Taxonomies\Channel\Channel;
 use BigCommerce\Webhooks\Product_Update_Webhook;
 use BigCommerce\Webhooks\Webhook;
 use BigCommerce\Webhooks\Webhook_Versioning;
@@ -107,11 +108,15 @@ function get_taxonomy_list() {
 		Flag::NAME,
 		Product_Category::NAME,
 		Product_Type::NAME,
+		Channel::NAME,
 	];
 }
 
 function delete_terms() {
 	foreach ( get_taxonomy_list() as $tax ) {
+		// In order to get the terms, taxonomy must first be registered
+		register_taxonomy( $tax, Product::NAME );
+
 		$terms = \get_terms( [
 			'taxonomy'   => $tax,
 			'hide_empty' => false,
@@ -128,10 +133,7 @@ function delete_tables() {
 	/** @var \wpdb $wpdb */
 	global $wpdb;
 	$tables = [
-		Schema\Products_Table::NAME,
-		Schema\Variants_Table::NAME,
 		Schema\Reviews_Table::NAME,
-		Schema\Import_Queue_Table::NAME,
 	];
 
 	foreach ( $tables as $table ) {
@@ -158,6 +160,8 @@ function delete_options() {
 		Settings\Sections\Import::OPTION_NEW_PRODUCTS,
 		Settings\Sections\Import::ENABLE_WEBHOOKS,
 		Settings\Sections\Account_Settings::SUPPORT_EMAIL,
+		Settings\Sections\Account_Settings::REGISTRATION_SPAM_CHECK,
+		Settings\Sections\Account_Settings::ALLOW_GLOBAL_LOGINS,
 		Settings\Sections\Analytics::SYNC_ANALYTICS,
 		Settings\Sections\Analytics::FACEBOOK_PIXEL,
 		Settings\Sections\Analytics::GOOGLE_ANALYTICS,
@@ -172,10 +176,7 @@ function delete_options() {
 		Settings\Sections\Troubleshooting_Diagnostics::LOG_ERRORS,
 		Settings\Sections\Units::MASS,
 		Settings\Sections\Units::LENGTH,
-		'schema-' . Schema\Products_Table::class,
-		'schema-' . Schema\Variants_Table::class,
 		'schema-' . Schema\Reviews_Table::class,
-		'schema-' . Schema\Import_Queue_Table::class,
 		'schema-' . Schema\User_Roles::class,
 		'schema-' . Webhook_Versioning::class,
 		Status::CURRENT_LOG,
@@ -219,6 +220,7 @@ function delete_options() {
 		Webhook::AUTH_KEY_OPTION,
 		Settings\Sections\Cart::OPTION_AJAX_CART,
 		Settings\Sections\Import::BATCH_SIZE,
+		Settings\Sections\Account_Settings::ALLOW_GLOBAL_LOGINS,
 		Term_Import::STATE_OPTION,
 	];
 

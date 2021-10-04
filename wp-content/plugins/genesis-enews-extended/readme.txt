@@ -3,9 +3,10 @@ Contributors: kraftbj
 Donate link: https://kraft.blog/donate/
 Tags: genesis, genesiswp, mailchimp, aweber, studiopress, newsletter, subscribe
 Requires at least: 4.9.6
-Tested up to: 5.2.0
+Requires PHP: 5.4.0
+Tested up to: 5.7.0
 Text Domain: genesis-enews-extended
-Stable tag: 2.1.1
+Stable tag: 2.2.0
 
 Creates a new widget to easily add mailing lists integration to a Genesis website. Works with FeedBurner, MailChimp, AWeber, FeedBlitz, ConvertKit and more.
 
@@ -50,6 +51,19 @@ Questions can be asked at the [WordPress.org Support Forum](https://wordpress.or
 2. Widget setting screen.
 
 == Changelog ==
+= 2.2.0 =
+* Adds "enews-{$field_count}-field" classes to form to aid in additional styling. See https://github.com/kraftbj/genesis-enews-extended/pull/152
+Props to JiveDig for the contribution.
+
+= 2.1.4 =
+* Accessibility: Use aria-label instead of <label> to prevent CSS being either over-agressive or not enough.
+
+= 2.1.2 =
+* Accessibility: Updates <label> to be implicit to eliminate duplication when multiple instances are used on a page.
+* Coding Standards: Implement WPCS.
+
+= 2.1.1 =
+* Remove comment that was displaying on the front end.
 
 = 2.1.0 =
 * Provide option to link to the site's Privacy Policy.
@@ -168,6 +182,7 @@ A special thanks to all who have contributed to Genesis eNews Extended.
 
 = Code Contributions =
 * Gary Jones (many, many times over)
+* Mike Hemberger
 * John Levandowski
 * David Decker
 * Kim Parsell

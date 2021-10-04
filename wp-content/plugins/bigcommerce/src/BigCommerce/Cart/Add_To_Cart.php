@@ -14,16 +14,6 @@ class Add_To_Cart {
 	const ACTION       = 'cart';
 
 	/**
-	 * @deprecated since 3.5.0 Use Cart::CART_COOKIE
-	 */
-	const CART_COOKIE  = Cart::CART_COOKIE;
-
-	/**
-	 * @deprecated since 3.5.0 Use Cart::COUNT_COOKIE
-	 */
-	const COUNT_COOKIE = Cart::COUNT_COOKIE;
-
-	/**
 	 * @param int     $post_id
 	 * @param CartApi $cart_api
 	 *
@@ -44,9 +34,10 @@ class Add_To_Cart {
 
 		$options = [];
 
-		$submitted_options  = empty( $_POST[ 'option' ] ) ? [] : (array) $_POST[ 'option' ];
-		$option_config = $product->options();
-		$modifier_config = $product->modifiers();
+		// Options are sanitized bellow
+		$submitted_options = empty( $_POST[ 'option' ] ) ? [] : (array) $_POST[ 'option' ]; // phpcs:ignore
+		$option_config     = $product->options();
+		$modifier_config   = $product->modifiers();
 		foreach ( $option_config as $config ) {
 			if ( array_key_exists( $config[ 'id' ], $submitted_options ) ) {
 				$options[ $config[ 'id' ] ] = absint( $submitted_options[ $config[ 'id' ] ] );

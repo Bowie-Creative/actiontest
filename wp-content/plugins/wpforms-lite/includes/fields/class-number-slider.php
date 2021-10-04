@@ -42,7 +42,26 @@ class WPForms_Field_Number_Slider extends WPForms_Field {
 		$this->order = 180;
 
 		// Customize value format for HTML emails.
-		add_filter( 'wpforms_html_field_value', array( $this, 'html_email_value' ), 10, 4 );
+		add_filter( 'wpforms_html_field_value', [ $this, 'html_email_value' ], 10, 4 );
+
+		// Builder strings.
+		add_filter( 'wpforms_builder_strings', [ $this, 'add_builder_strings' ] );
+	}
+
+	/**
+	 * Add Builder strings.
+	 *
+	 * @since 1.6.2.3
+	 *
+	 * @param array $strings Form Builder strings.
+	 *
+	 * @return array Form Builder strings.
+	 */
+	public function add_builder_strings( $strings ) {
+
+		$strings['error_number_slider_increment'] = esc_html__( 'Increment value should be greater than zero. Decimal fractions allowed.', 'wpforms-lite' );
+
+		return $strings;
 	}
 
 	/**
@@ -188,9 +207,6 @@ class WPForms_Field_Number_Slider extends WPForms_Field {
 		// Size.
 		$this->field_option( 'size', $field );
 
-		// Hide label.
-		$this->field_option( 'label_hide', $field );
-
 		// Default value.
 		$lbl = $this->field_element(
 			'label',
@@ -283,7 +299,7 @@ class WPForms_Field_Number_Slider extends WPForms_Field {
 				'value' => ! empty( $field['step'] ) ? abs( $field['step'] ) : self::SLIDER_STEP,
 				'attrs' => array(
 					'min' => 0,
-					'max' => isset( $field['max'] ) && is_numeric( $field['max'] ) ? (float) $field['max'] : self::SLIDER_MAX,
+					'max' => isset( $field['max'] ) && is_numeric( $field['max'] ) ? abs( (float) $field['max'] ) : self::SLIDER_MAX,
 				),
 			),
 			false
@@ -292,19 +308,23 @@ class WPForms_Field_Number_Slider extends WPForms_Field {
 		$this->field_element(
 			'row',
 			$field,
-			array(
+			[
 				'slug'    => 'step',
 				'content' => $lbl . $fld,
-			)
+			]
 		);
 
 		// Custom CSS classes.
 		$this->field_option( 'css', $field );
 
+		// Hide label.
+		$this->field_option( 'label_hide', $field );
+
 		// Options close markup.
-		$args = array(
+		$args = [
 			'markup' => 'close',
-		);
+		];
+
 		$this->field_option( 'advanced-options', $field, $args );
 	}
 
@@ -395,7 +415,11 @@ class WPForms_Field_Number_Slider extends WPForms_Field {
 		$field_submit = (float) $this->sanitize_value( $field_submit );
 
 		// Basic required check - if field is marked as required, check for entry data.
-		if ( ! empty( $form_data['fields'][ $field_id ]['required'] ) && empty( $field_submit ) && 0 != $field_submit ) {
+		if (
+			! empty( $form_data['fields'][ $field_id ]['required'] ) &&
+			empty( $field_submit ) &&
+			(string) $field_submit !== '0'
+		) {
 			wpforms()->process->errors[ $form_id ][ $field_id ] = wpforms_get_required_label();
 		}
 

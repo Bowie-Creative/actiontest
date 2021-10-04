@@ -146,10 +146,17 @@ function wpforms_settings_license_callback( $args ) {
 		return $output;
 	}
 
-	$key  = wpforms_setting( 'key', '', 'wpforms_license' );
-	$type = wpforms_get_license_type();
+	$license      = (array) get_option( 'wpforms_license', [] );
+	$key          = ! empty( $license['key'] ) ? $license['key'] : '';
+	$type         = ! empty( $license['type'] ) ? $license['type'] : '';
+	$is_valid_key = ! empty( $key ) &&
+	                ( isset( $license['is_expired'] ) && $license['is_expired'] === false ) &&
+	                ( isset( $license['is_disabled'] ) && $license['is_disabled'] === false ) &&
+	                ( isset( $license['is_invalid'] ) && $license['is_invalid'] === false );
 
-	$output  = '<input type="password" id="wpforms-setting-license-key" value="' . esc_attr( $key ) . '" />';
+	$output  = '<span class="wpforms-setting-license-wrapper">';
+	$output .= '<input type="password" id="wpforms-setting-license-key" value="' . esc_attr( $key ) . '"' . disabled( true, $is_valid_key, false ) . ' />';
+	$output .= '</span>';
 	$output .= '<button id="wpforms-setting-license-key-verify" class="wpforms-btn wpforms-btn-md wpforms-btn-orange">' . esc_html__( 'Verify Key', 'wpforms-lite' ) . '</button>';
 
 	// Offer option to deactivate the key.
@@ -161,21 +168,17 @@ function wpforms_settings_license_callback( $args ) {
 	$output .= '<p class="type ' . $class . '">' .
 				sprintf(
 					/* translators: $s - license type. */
-					esc_html__( 'Your license key type is %s.', 'wpforms-lite' ),
-					'<strong>' . esc_html( $type ) . '</strong>'
+					esc_html__( 'Your license key level is %s.', 'wpforms-lite' ),
+					'<strong>' . esc_html( ucwords( $type ) ) . '</strong>'
 				) .
 				'</p>';
 	$output .= '<p class="desc ' . $class . '">' .
-				wp_kses(
-					__( 'If your license has been upgraded or is incorrect, <a href="#" id="wpforms-setting-license-key-refresh">click here to force a refresh</a>.', 'wpforms-lite' ),
-					array(
-						'a' => array(
-							'href' => array(),
-							'id'   => array(),
-						),
-					)
-				) .
-				'</p>';
+				sprintf( /* translators: %s - Refresh link. */
+					esc_html__( 'If your license has been upgraded or is incorrect, then please %1$sforce a refresh%2$s.', 'wpforms-lite' ),
+					'<a href="#" id="wpforms-setting-license-key-refresh">',
+					'</a>'
+				)
+				. '</p>';
 
 	return $output;
 }
@@ -345,8 +348,8 @@ function wpforms_settings_radio_callback( $args ) {
 	foreach ( $args['options'] as $option => $name ) {
 
 		$checked = checked( $value, $option, false );
-		$output .= '<label for="wpforms-setting-' . $id . '[' . $x . ']" class="option-' . sanitize_html_class( $option ) . '">';
 		$output .= '<input type="radio" id="wpforms-setting-' . $id . '[' . $x . ']" name="' . $id . '" value="' . esc_attr( $option ) . '" ' . $checked . '>';
+		$output .= '<label for="wpforms-setting-' . $id . '[' . $x . ']" class="option-' . sanitize_html_class( $option ) . '">';
 		$output .= esc_html( $name );
 		$output .= '</label>';
 		$x ++;

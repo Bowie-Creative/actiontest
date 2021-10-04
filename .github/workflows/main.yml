@@ -13,13 +13,12 @@ jobs:
       
       # Deploy vars
         WPE_SSHG_KEY_PRIVATE: ${{ secrets.WPE_SSHG_KEY_PRIVATE }} 
-        TPO_SRC_PATH: "wp-content/themes/authority-pro/"
-        TPO_PATH: "wp-content/themes/authority-pro"
         
       
       # Branches & Environments 
-
-
+        PRD_BRANCH: main
+        PRD_ENV: selive
+        
         STG_BRANCH: stagebranch 
         STG_ENV: selivestaging
 

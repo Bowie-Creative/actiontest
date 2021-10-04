@@ -43,8 +43,9 @@ class Forms extends Provider {
 		 * Handle all form submissions with a bc-action argument
 		 */
 		add_action( 'parse_request', $this->create_callback( 'handle_form_action', function () use ( $container ) {
-			if ( isset( $_REQUEST[ 'bc-action' ] ) ) {
-				do_action( 'bigcommerce/form/action=' . $_REQUEST[ 'bc-action' ], stripslashes_deep( $_REQUEST ) );
+			$action = filter_var_array( $_REQUEST, [ 'bc-action' => FILTER_SANITIZE_STRING ] );
+			if ( $action['bc-action'] ) {
+				do_action( 'bigcommerce/form/action=' . $action['bc-action'], stripslashes_deep( $_REQUEST ) );
 			}
 		} ), 10, 0 );
 
@@ -70,7 +71,7 @@ class Forms extends Provider {
 		} ), 10, 1 );
 
 		$container[ self::REGISTER ] = function ( Container $container ) {
-			return new Registration_Handler();
+			return new Registration_Handler( $container[ Compatibility::SPAM_CHECKER ] );
 		};
 		add_action( 'bigcommerce/form/action=' . Registration_Handler::ACTION, $this->create_callback( 'register', function ( $submission ) use ( $container ) {
 			return $container[ self::REGISTER ]->handle_request( $submission );

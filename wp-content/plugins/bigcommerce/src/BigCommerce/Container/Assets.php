@@ -7,6 +7,7 @@ namespace BigCommerce\Container;
 use BigCommerce\Assets\Admin;
 use BigCommerce\Assets\Theme;
 use BigCommerce\Plugin;
+use BigCommerce\Taxonomies\Channel\Connections;
 use Pimple\Container;
 
 class Assets extends Provider {
@@ -63,6 +64,12 @@ class Assets extends Provider {
 			$container[ self::ADMIN_SCRIPTS ]->enqueue_scripts();
 			$container[ self::ADMIN_STYLES ]->enqueue_styles();
 		} ), 9, 0 );
+		
+		add_action( 'admin_enqueue_scripts', $this->create_callback( 'admin_remove_google_sitekit_script_on_bc_admin_pages', function ( $hook ) {
+			if ( strpos( get_current_screen()->id, 'bigcommerce') !== false ) {
+				wp_dequeue_script( 'googlesitekit-base' );
+			}
+		} ), 999 );
 	}
 
 	public function frontend( Container $container ) {
@@ -75,7 +82,7 @@ class Assets extends Provider {
 		};
 
 		$container[ self::FRONTEND_CONFIG ] = function ( Container $container ) {
-			return new Theme\JS_Config( $container[ self::PATH ] );
+			return new Theme\JS_Config( $container[ self::PATH ], new Connections() );
 		};
 
 		$container[ self::FRONTEND_LOCALIZATION ] = function( Container $container ) {

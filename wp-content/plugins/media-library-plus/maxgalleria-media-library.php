@@ -3,7 +3,7 @@
 Plugin Name: Media Library Folders for WordPress
 Plugin URI: http://maxgalleria.com
 Description: Gives you the ability to adds folders and move files in the WordPress Media Library.
-Version: 7.0.0
+Version: 7.0.3
 Author: Max Foundry
 Author URI: http://maxfoundry.com
 
@@ -52,7 +52,7 @@ class MaxGalleriaMediaLib {
 
 	public function set_global_constants() {	
 		define('MAXGALLERIA_MEDIA_LIBRARY_VERSION_KEY', 'maxgalleria_media_library_version');
-		define('MAXGALLERIA_MEDIA_LIBRARY_VERSION_NUM', '7.0.0');
+		define('MAXGALLERIA_MEDIA_LIBRARY_VERSION_NUM', '7.0.3');
 		define('MAXGALLERIA_MEDIA_LIBRARY_IGNORE_NOTICE', 'maxgalleria_media_library_ignore_notice');
 		define('MAXGALLERIA_MEDIA_LIBRARY_PLUGIN_NAME', trim(dirname(plugin_basename(__FILE__)), '/'));
 		define('MAXGALLERIA_MEDIA_LIBRARY_PLUGIN_DIR', WP_PLUGIN_DIR . '/' . MAXGALLERIA_MEDIA_LIBRARY_PLUGIN_NAME);
@@ -1257,7 +1257,7 @@ and pm.meta_key = '_wp_attached_file'";
 						echo '  <a id="select-media" help="' . __('Select or unselect all files in the folder.','maxgalleria-media-library') . '" class="gray-blue-link" >' .  __('Select/Unselect All','maxgalleria-media-library') . '</a>' . PHP_EOL;
                         
             echo '  <div id="sort-wrap"><select id="mgmlp-sort-order">' . PHP_EOL;
-            echo '    <option value="1" ' . ($sort_order === '1' ? 'selected="selected"' : ''  ). '>' . __('Sort by Name','maxgalleria-media-library') . '</option>' . PHP_EOL;
+            echo '    <option value="1" ' . ($sort_order === '1' ? 'selected="selected"' : ''  ). '>' . __('Sort by Title','maxgalleria-media-library') . '</option>' . PHP_EOL;
             echo '    <option value="0" ' . ($sort_order === '0' ? 'selected="selected"' : ''  ). '>' . __('Sort by Date','maxgalleria-media-library') . '</option>' . PHP_EOL;
             echo '  </select></div>' . PHP_EOL;
                                     
@@ -1626,6 +1626,7 @@ and pm.meta_key = '_wp_attached_file'";
 		$output .= '          jQuery("#mgmlp-file-container").html(data);' . PHP_EOL;		
 		$output .= '          jQuery("li a.media-attachment").draggable({' . PHP_EOL;
 		$output .= '          	cursor: "move",' . PHP_EOL;
+    $output .= '            cursorAt: { left: 25, top: 25 },' . PHP_EOL;
 		$output .= '          helper: function() {' . PHP_EOL;
 		$output .= '          	var selected = jQuery(".mg-media-list input:checked").parents("li");' . PHP_EOL;
 		$output .= '          	if (selected.length === 0) {' . PHP_EOL;

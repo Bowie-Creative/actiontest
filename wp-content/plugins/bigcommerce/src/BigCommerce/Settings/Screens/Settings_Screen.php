@@ -28,14 +28,6 @@ class Settings_Screen extends Abstract_Screen {
 	 */
 	public function register_settings_page() {
 		parent::register_settings_page();
-		/**
-		 * Triggered after registering the main settings screen
-		 *
-		 * @param string $hook_suffix
-		 *
-		 * @deprecated 2018-08-30 Use 'bigcommerce/settings/register/screen=' . Settings_Screen::NAME
-		 */
-		do_action( 'bigcommerce/settings/register', $this->hook_suffix );
 	}
 
 	public function get_header() {
@@ -63,23 +55,23 @@ class Settings_Screen extends Abstract_Screen {
 		echo '</div>'; // bc-settings__welcome
 
 		echo '<div class="bc-settings-header__cta">';
-		printf( '<h2 class="bc-settings-header__cta-title">%s</h2>', __( 'Manage your products.', 'bigcommerce' ) );
-		if ( $last_import_date ) {
-			printf( '<p class="bc-settings-header__cta-text">%s</p>', sprintf(
-				__( 'Your last sync was on %s', 'bigcommerce' ),
-				$last_import_date
-			) );
-		}
+		printf( '<h2 class="bc-settings-header__cta-title">%s</h2>', esc_html( __( 'Manage your products.', 'bigcommerce' ) ) );
 		echo '<div class="bc-settings-header__cta-btn" data-js="bc-product-sync-button">';
 		printf( '<a href="%s" target="_blank" rel="noopener" class="bc-admin-btn bc-settings-header__manage-button">%s</a>',
 			esc_url( $this->manage_products_url() ),
-			__( 'Manage on BigCommerce', 'bigcommerce' )
+			esc_html( __( 'Manage on BigCommerce', 'bigcommerce' ) )
 		);
-
 		/**
 		 * Triggered after rendering the last import date in the settings header
 		 */
 		do_action( 'bigcommerce/settings/header/import_status' );
+
+		if ( $last_import_date ) {
+			printf( '<p class="bc-settings-header__cta-text">%s</p>', sprintf(
+				esc_html( __( 'Your last sync was on %s', 'bigcommerce' ) ),
+				$last_import_date
+			) );
+		}
 
 		echo '</div>'; // bc-settings__cta-buttons
 
@@ -92,7 +84,7 @@ class Settings_Screen extends Abstract_Screen {
 
 	protected function submit_button() {
 		echo '<div class="bc-plugin-page-header">';
-		printf( '<a href="%s" target="_blank" rel="noopener"><img class="bc-settings-save__logo" src="%s" alt="%s" /></a>', esc_url( $this->login_url() ), trailingslashit( $this->assets_url ) . 'img/admin/big-commerce-logo.svg', __( 'BigCommerce', 'bigcommerce' ) );
+		printf( '<a href="%s" target="_blank" rel="noopener"><img class="bc-settings-save__logo" src="%s" alt="%s" /></a>', esc_url( $this->login_url() ), trailingslashit( $this->assets_url ) . 'img/admin/big-commerce-logo.svg', esc_html( __( 'BigCommerce', 'bigcommerce' ) ) );
 		submit_button();
 		echo '</div>';
 	}
@@ -134,7 +126,7 @@ class Settings_Screen extends Abstract_Screen {
 		printf(
 			'<p><a href="%s">%s</a></p>',
 			esc_url( $support_link ),
-			__( 'Have questions? Need help?', 'bigcommerce' )
+			esc_html( __( 'Have questions? Need help?', 'bigcommerce' ) )
 		);
 	}
 

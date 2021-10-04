@@ -61,3 +61,19 @@ export const wpAPIProductPricing = (pricingURL = '', pricingNonce = '', products
 		response: 15000,  // Wait 15 seconds for the server to start sending,
 		deadline: 60000, // but allow 1 minute for the file to finish loading.
 	});
+
+export const wpAPIGetShippingZones = URL => request
+	.get(URL);
+
+export const wpAPIGetShippingMethods = (url, zoneID = '') => request
+	.get(`${url}/${zoneID}/methods/html`);
+
+export const wpAPICouponCodes = (couponCodeURL = '', queryObj = {}, couponsNonce = '') => request
+	.post(couponCodeURL)
+	.set('Content-Type', 'application/json')
+	.set('X-WP-Nonce', couponsNonce)
+	.query(queryObj)
+	.timeout({
+		response: 15000,  // Wait 15 seconds for the server to start sending,
+		deadline: 30000, // but allow 30 seconds for the request to finish processing.
+	});

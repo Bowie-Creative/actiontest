@@ -63,8 +63,9 @@ class Proxy_Controller extends WP_REST_Controller {
 			'/carts(\/?$)',
 			[
 				[
-					'methods'  => WP_REST_Server::CREATABLE,
-					'callback' => [ $this, 'create_cart' ],
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'create_cart' ],
+					'permission_callback' => '__return_true',
 				],
 			]
 		);
@@ -74,8 +75,9 @@ class Proxy_Controller extends WP_REST_Controller {
 			[
 				$public_args,
 				[
-					'methods'  => [ WP_REST_Server::DELETABLE, WP_REST_SERVER::CREATABLE ],
-					'callback' => [ $this, 'delete_cart' ],
+					'methods'             => [ WP_REST_Server::DELETABLE, WP_REST_SERVER::CREATABLE ],
+					'callback'            => [ $this, 'delete_cart' ],
+					'permission_callback' => '__return_true',
 				],
 			]
 		);
@@ -84,8 +86,20 @@ class Proxy_Controller extends WP_REST_Controller {
 			'/carts/(.*)/items/(.*)',
 			[
 				[
-					'methods'  => [ WP_REST_Server::DELETABLE, WP_REST_SERVER::CREATABLE ],
-					'callback' => [ $this, 'update_cart_item' ],
+					'methods'             => [ WP_REST_Server::DELETABLE, WP_REST_SERVER::CREATABLE ],
+					'callback'            => [ $this, 'update_cart_item' ],
+					'permission_callback' => '__return_true',
+				],
+			]
+		);
+		register_rest_route(
+			$this->proxy_base,
+			'/carts/(.*)/items',
+			[
+				[
+					'methods'             => [ WP_REST_SERVER::CREATABLE ],
+					'callback'            => [ $this, 'add_cart_items' ],
+					'permission_callback' => '__return_true',
 				],
 			]
 		);
@@ -94,8 +108,9 @@ class Proxy_Controller extends WP_REST_Controller {
 			'/carts/(.*)/redirect_urls(\/?$)',
 			[
 				[
-					'methods'  => WP_REST_Server::CREATABLE,
-					'callback' => [ $this, 'create_redirect_url' ],
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'create_redirect_url' ],
+					'permission_callback' => '__return_true',
 				],
 			]
 		);
@@ -211,6 +226,35 @@ class Proxy_Controller extends WP_REST_Controller {
 
 			$args['body'] = wp_json_encode( $body );
 		}
+
+		$response = wp_remote_request( $route, $args );
+
+		return rest_ensure_response( json_decode( wp_remote_retrieve_body( $response ), true ) );
+	}
+	
+	/**
+	 * Add cart line items.
+	 *
+	 * @param WP_REST_Request $request Request instance.
+	 * @return WP_REST_Response
+	 */
+	public function add_cart_items( $request ) {
+		$route = $this->route( $request );
+
+		$params = $request->get_body_params();
+		if ( empty( $params ) ) {
+			$params = json_decode( $request->get_body(), true );
+		}
+		$params = wp_parse_args( $params, [ 'line_items' => [], 'gift_certificates' => [] ] );
+
+		$args = [
+			'method'  => $request->get_method(),
+			'headers' => $this->get_request_headers( $request, $route ),
+			'body'    => wp_json_encode( [
+				'line_items'        => $params['line_items'],
+				'gift_certificates' => $params['gift_certificates'],
+			] ),
+		];
 
 		$response = wp_remote_request( $route, $args );
 

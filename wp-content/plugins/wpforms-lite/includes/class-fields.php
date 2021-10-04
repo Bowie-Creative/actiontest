@@ -45,6 +45,7 @@ class WPForms_Fields {
 				'radio',
 				'checkbox',
 				'divider',
+				'entry-preview',
 				'email',
 				'url',
 				'hidden',
@@ -81,6 +82,8 @@ class WPForms_Fields {
 				require_once WPFORMS_PLUGIN_DIR . 'pro/includes/fields/class-' . $field . '.php';
 			}
 		}
+
+		new \WPForms_Field_Email();
 	}
 }
 new WPForms_Fields();

@@ -4,8 +4,13 @@
 namespace BigCommerce\Import\Importers\Terms;
 
 use BigCommerce\Import\Import_Strategy;
+use BigCommerce\Import\Image_Importer;
 
 abstract class Term_Saver implements Import_Strategy {
+
+	const DATA_HASH_META_KEY        = 'bigcommerce_data_hash';
+	const IMPORTER_VERSION_META_KEY = 'bigcommerce_importer_version';
+
 	/** @var \ArrayAccess */
 	protected $bc_term;
 
@@ -29,6 +34,10 @@ abstract class Term_Saver implements Import_Strategy {
 	public function do_import() {
 		$this->term_id = $this->save_wp_term( $this->bc_term );
 		$this->save_wp_termmeta( $this->bc_term );
+		$this->import_image( $this->bc_term );
+
+		update_term_meta( $this->term_id, self::DATA_HASH_META_KEY, self::hash( $this->bc_term ) );
+		update_term_meta( $this->term_id, self::IMPORTER_VERSION_META_KEY, Import_Strategy::VERSION );
 
 		return $this->term_id;
 	}
@@ -70,7 +79,16 @@ abstract class Term_Saver implements Import_Strategy {
 
 		$duplicate = get_term_by( 'slug', $slug, $this->taxonomy );
 		if ( $duplicate && (int) $duplicate->term_id !== (int) $this->term_id ) {
-			$slug = ''; // let WP auto-assign the slug, otherwise the creation will fail
+			$term = get_term( $this->term_id );
+			$current_slug = '';
+			if ( ! empty( $term->slug ) ) {
+				$current_slug = $term->slug;
+			}
+			if ( $current_slug === $duplicate->slug ) {
+				$slug = ''; // let WP auto-assign the slug, otherwise the creation will fail
+			} else {
+				$slug = $current_slug; // keep the current slug else WP will alternate the slug on each import
+			}
 		}
 
 		return $slug;
@@ -137,5 +155,39 @@ abstract class Term_Saver implements Import_Strategy {
 		}
 
 		return 0;
+	}
+
+	protected function import_image( \ArrayAccess $bc_term ) {
+		$image_url = $bc_term[ 'image_url' ];
+
+		// find an existing image
+		$existing = get_posts( [
+			'post_type'      => 'attachment',
+			'meta_query'     => [
+				[
+					'key'     => Image_Importer::SOURCE_URL,
+					'value'   => $image_url,
+					'compare' => '=',
+				],
+			],
+			'fields'         => 'ids',
+			'posts_per_page' => 1,
+		] );
+
+		if ( ! empty( $existing ) ) {
+			$post_id = reset( $existing );
+		} else {
+			$importer = new Image_Importer( $image_url );
+			$post_id  = $importer->import();
+		}
+		if ( ! empty( $post_id ) ) {
+			update_term_meta( $this->term_id, 'thumbnail_id', $post_id );
+		} else {
+			delete_term_meta( $this->term_id, 'thumbnail_id' );
+		}
+	}
+
+	public static function hash( $bc_term ) {
+		return md5( $bc_term );
 	}
 }

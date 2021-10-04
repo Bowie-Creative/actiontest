@@ -10,6 +10,7 @@ import * as tools from 'utils/tools';
 import queryToJson from 'utils/data/query-to-json';
 import updateQueryVar from 'utils/data/update-query-var';
 import { trigger } from 'utils/events';
+import { NLS } from 'publicConfig/i18n';
 import { PRODUCT_MESSAGES } from '../config/wp-settings';
 import { productMessage } from '../templates/product-message';
 
@@ -67,6 +68,33 @@ const setButtonState = (button) => {
 	}
 
 	disableActionButton(button);
+};
+
+
+/**
+ * @function setInventory
+ * @description Updates inventory/out of stock message and inputs
+ */
+const setInventory = () => {
+	// update inventory message and quantity only if it's set
+	if (state.maxInventory === -1) {
+		return;
+	}
+
+	const productTitle = tools.getNodes('.bc-product__title', false, document, true)[0];
+	const qtyInput = tools.getNodes('.bc-product-form__quantity-input', false, document, true)[0];
+	let inventoryContainer = tools.getNodes('.bc-product__inventory', false, document, true)[0];
+
+	if (!inventoryContainer) {
+		inventoryContainer = document.createElement('div');
+		tools.addClass(inventoryContainer, 'bc-product__inventory');
+		productTitle.appendChild(inventoryContainer);
+	}
+
+	// update input max
+	if (qtyInput && state.maxInventory !== -1) {
+		qtyInput.max = state.maxInventory;
+	}
 };
 
 /**
@@ -130,11 +158,30 @@ const setSelectedVariantPrice = (wrapper = '') => {
 };
 
 /**
+ * @function setVariantSKU
+ * @description Update the variant SKU after successful variant selection;
+ * @param wrapper
+ */
+const setVariantSKU = (wrapper = '') => {
+	if (!wrapper) {
+		return;
+	}
+
+	const skuWrapper = tools.getNodes('bc-product-sku', false, wrapper)[0];
+	if (!skuWrapper) { // No SKU template wrapper. No SKU
+		return;
+	}
+
+	skuWrapper.textContent = state.sku.length > 0 ? state.sku : '';
+};
+
+/**
  * @function showVariantImage
  * @description Shows the variant image if one is available from state.variantImage.url.
  * @param swiperInstance
+ * @param swiperNavInstance
  */
-const showVariantImage = (swiperInstance) => {
+const showVariantImage = (swiperInstance, swiperNavInstance) => {
 	const slide = document.createElement('div');
 	tools.addClass(slide, 'swiper-slide');
 	tools.addClass(slide, 'bc-product-gallery__image-slide');
@@ -148,7 +195,9 @@ const showVariantImage = (swiperInstance) => {
 	image.setAttribute('srcset', state.variantImage.srcset);
 
 	swiperInstance.appendSlide(slide);
+	swiperInstance.update();
 	swiperInstance.slideTo(swiperInstance.slides.length);
+	swiperNavInstance.slideTo(0);
 
 	_.delay(() => {
 		trigger({ event: 'bigcommerce/init_slide_zoom', data: { container: slide.querySelector('img') }, native: false });
@@ -159,8 +208,9 @@ const showVariantImage = (swiperInstance) => {
  * @function removeVariantImage
  * @description Hide the active variant image.
  * @param swiperInstance
+ * @param swiperNavInstance
  */
-const removeVariantImage = (swiperInstance) => {
+const removeVariantImage = (swiperInstance, swiperNavInstance) => {
 	let slideIndex = '';
 
 	Object.entries(swiperInstance.slides).forEach(([key, slide]) => {
@@ -173,12 +223,14 @@ const removeVariantImage = (swiperInstance) => {
 		}
 	});
 
+	swiperInstance.slideTo(0);
+	swiperNavInstance.slideTo(0);
+
 	if (!slideIndex) {
 		return;
 	}
 
 	swiperInstance.removeSlide(slideIndex);
-	swiperInstance.slideTo(1);
 };
 
 /**
@@ -201,14 +253,21 @@ const showHideVariantImage = (e, wrapper = '') => {
 	}
 
 	state.variantImage.template = variantContainer.innerHTML;
-	const swiperInstance = tools.getNodes('bc-gallery-container', false, currentWrapper)[0].swiper;
+	const swiperWrapper = tools.getNodes('bc-gallery-container', false, currentWrapper)[0];
+	const swiperInstance = swiperWrapper.swiper;
+	const swiperNavWrapper = tools.getNodes(`[data-id="${swiperWrapper.dataset.controls}"]`, false, document, true)[0];
+	// Check that the proper thumbnail slider present in the DOM before calling the swiper object.
+	if (!swiperNavWrapper) {
+		return;
+	}
+	const swiperNavInstance = swiperNavWrapper.swiper;
 
 	// hide the image after each variant request.
-	removeVariantImage(swiperInstance);
+	removeVariantImage(swiperInstance, swiperNavInstance);
 
 	// If there is a variant image, show it with a short delay for animation purposes.
 	if (state.variantImage.url) {
-		showVariantImage(swiperInstance);
+		showVariantImage(swiperInstance, swiperNavInstance);
 	}
 };
 
@@ -226,6 +285,7 @@ const handleSelectedVariant = (product = {}) => {
 	state.variantPrice = product.formatted_price;
 	state.variantID = product.variant_id;
 	state.sku = product.sku;
+	state.maxInventory = product.inventory;
 
 	// Case: product variant has a variant image.
 	if (product.image.url.length > 0) {
@@ -238,6 +298,7 @@ const handleSelectedVariant = (product = {}) => {
 	if ((product.inventory > 0 || product.inventory === -1) && !product.disabled) {
 		state.isValidOption = true;
 		state.variantMessage = '';
+		state.inventoryMessage = `(${product.inventory} ${NLS.inventory.in_stock})`;
 		return;
 	}
 
@@ -252,6 +313,7 @@ const handleSelectedVariant = (product = {}) => {
 	if (product.inventory === 0) {
 		state.isValidOption = false;
 		state.variantMessage = PRODUCT_MESSAGES.not_available;
+		state.inventoryMessage = NLS.inventory.out_of_stock;
 		return;
 	}
 
@@ -392,6 +454,8 @@ const handleSelections = (e, node = '') => {
 	}
 
 	state.variantMessage = '';
+	state.inventoryMessage = '';
+	state.maxInventory = '';
 	state.variantID = '';
 	state.sku = '';
 	state.variantPrice = '';
@@ -413,6 +477,8 @@ const handleSelections = (e, node = '') => {
 	setProductURLParameter();
 	setVariantIDHiddenField(formWrapper);
 	setSelectedVariantPrice(metaWrapper);
+	setVariantSKU(metaWrapper);
+	setInventory();
 	showHideVariantImage(null, metaWrapper);
 	setButtonState(submitButton);
 	handleAlertMessage(formWrapper);

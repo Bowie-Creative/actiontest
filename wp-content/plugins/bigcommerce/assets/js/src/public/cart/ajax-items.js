@@ -12,6 +12,7 @@ import { on, trigger } from 'utils/events';
 import cartState from 'publicConfig/cart-state';
 import { CART_API_BASE } from 'publicConfig/wp-settings';
 import { CART_ID_COOKIE_NAME, CART_ITEM_COUNT_COOKIE } from 'bcConstants/cookies';
+import { AJAX_CART_UPDATE, HANDLE_CART_STATE, HANDLE_COUPON_CODE } from 'bcConstants/events';
 import { NLS } from 'publicConfig/i18n';
 import { cartEmpty } from './cart-templates';
 import { updateMenuQtyTotal, updateCartMenuItem, updateFlatsomeCartMenuQty, updateFlatsomeCartMenuPrice } from './cart-menu-item';
@@ -66,6 +67,7 @@ const handleCartState = (e) => {
 		const itemRemoveButtons = tools.getNodes('.bc-cart-item__remove-button', true, cart, true);
 		const checkoutButton = tools.getNodes('proceed-to-checkout', false, cart)[0];
 		const isMiniCart = tools.closest(cart, '[data-js="bc-mini-cart"]');
+		const shippingMethods = tools.getNodes('[data-shipping-field]', true, cart, true);
 
 		if (isMiniCart && isMiniCart.dataset.miniCartId === eventMiniCart) {
 			return;
@@ -81,6 +83,9 @@ const handleCartState = (e) => {
 			if (checkoutButton) {
 				checkoutButton.setAttribute('disabled', 'disabled');
 			}
+			if (shippingMethods) {
+				shippingMethods.forEach(field => field.setAttribute('disabled', 'disabled'));
+			}
 			cart.classList.add('bc-updating-cart');
 
 			return;
@@ -93,7 +98,10 @@ const handleCartState = (e) => {
 			item.removeAttribute('disabled');
 		});
 		if (checkoutButton) {
-			checkoutButton.removeAttribute('disabled', 'disabled');
+			checkoutButton.removeAttribute('disabled');
+		}
+		if (shippingMethods) {
+			shippingMethods.forEach(field => field.removeAttribute('disabled'));
 		}
 
 		cart.classList.remove('bc-updating-cart');
@@ -124,10 +132,12 @@ const updateCartItems = (data = {}) => {
  * @param data
  */
 const updatedCartTotals = (data = {}) => {
+	const cartData = data.detail ? data.detail.data : data;
+
 	tools.getNodes('bc-cart', true).forEach((cart) => {
-		const baseAmount = data.subtotal.formatted;
+		const baseAmount = cartData.subtotal.formatted;
 		const subTotal = tools.getNodes('.bc-cart-subtotal__amount', false, cart, true)[0];
-		const taxAmount = data.tax_amount.formatted;
+		const taxAmount = cartData.tax_amount.formatted;
 		const taxTotal = tools.getNodes('.bc-cart-tax__amount', false, cart, true)[0];
 
 		subTotal.textContent = baseAmount;
@@ -231,7 +241,7 @@ const handleQtyUpdate = (inputEvent) => {
 
 				inputEvent.delegateTarget.setAttribute('data-currentvalue', inputEvent.delegateTarget.value);
 				cartItemQtyUpdated(res.body);
-				trigger({ event: 'bigcommerce/update_mini_cart', data: { miniCartID }, native: false });
+				trigger({ event: AJAX_CART_UPDATE, data: { miniCartID, cartData: res.body }, native: false });
 			});
 	}, timeoutOptions.delay);
 };
@@ -300,14 +310,16 @@ const handleCartItemRemoval = (e) => {
 			}
 
 			removeCartItem(itemRow, res);
-			trigger({ event: 'bigcommerce/update_mini_cart', data: { miniCartID }, native: false });
+			trigger({ event: AJAX_CART_UPDATE, data: { miniCartID, cartData: res.body }, native: false });
 		});
 };
 
 const bindEvents = () => {
 	delegate(document, '[data-js="bc-cart-item__quantity"]', 'input', handleQtyUpdate);
 	delegate(document, '[data-js="remove-cart-item"]', 'click', handleCartItemRemoval);
-	on(document, 'bigcommerce/handle_cart_state', handleCartState);
+	on(document, HANDLE_CART_STATE, handleCartState);
+	on(document, HANDLE_COUPON_CODE, handleCartState);
+	on(document, HANDLE_COUPON_CODE, updatedCartTotals);
 };
 
 const init = () => {

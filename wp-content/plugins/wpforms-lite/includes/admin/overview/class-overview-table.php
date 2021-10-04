@@ -60,7 +60,7 @@ class WPForms_Overview_Table extends WP_List_Table {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param WP_Post $form
+	 * @param WP_Post $form Form.
 	 *
 	 * @return string
 	 */
@@ -74,8 +74,8 @@ class WPForms_Overview_Table extends WP_List_Table {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param WP_Post $form
-	 * @param string  $column_name
+	 * @param WP_Post $form        Form.
+	 * @param string  $column_name Column Name.
 	 *
 	 * @return string
 	 */
@@ -119,7 +119,7 @@ class WPForms_Overview_Table extends WP_List_Table {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param WP_Post $form
+	 * @param WP_Post $form Form.
 	 *
 	 * @return string
 	 */
@@ -323,9 +323,9 @@ class WPForms_Overview_Table extends WP_List_Table {
 	 * @since 1.0.0
 	 */
 	public function no_items() {
+
 		printf(
-			wp_kses(
-				/* translators: %s - WPForms Builder page. */
+			wp_kses( /* translators: %s - WPForms Builder page. */
 				__( 'Whoops, you haven\'t created a form yet. Want to <a href="%s">give it a go</a>?', 'wpforms-lite' ),
 				array(
 					'a' => array(
@@ -360,7 +360,12 @@ class WPForms_Overview_Table extends WP_List_Table {
 		$this->_column_headers = array( $columns, $hidden, $sortable );
 
 		// Get forms.
-		$total    = wp_count_posts( 'wpforms' )->publish;
+		if ( wpforms_current_user_can( 'wpforms_view_others_forms' ) ) {
+			$total = wp_count_posts( 'wpforms' )->publish;
+		} else {
+			$total = count_user_posts( get_current_user_id(), 'wpforms', true );
+		}
+
 		$page     = $this->get_pagenum();
 		$order    = isset( $_GET['order'] ) ? $_GET['order'] : 'DESC';
 		$orderby  = isset( $_GET['orderby'] ) ? $_GET['orderby'] : 'ID';

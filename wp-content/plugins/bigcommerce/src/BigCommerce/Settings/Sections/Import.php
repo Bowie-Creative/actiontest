@@ -23,6 +23,7 @@ class Import extends Settings_Section {
 	const FREQUENCY_DAILY   = 'daily';
 	const FREQUENCY_WEEKLY  = 'weekly';
 	const FREQUENCY_MONTHLY = 'monthly';
+	const FREQUENCY_NEVER   = 'never';
 
 	const DEFAULT_FREQUENCY = self::FREQUENCY_FIVE;
 
@@ -168,6 +169,7 @@ class Import extends Settings_Section {
 			self::FREQUENCY_DAILY   => __( 'Day', 'bigcommerce' ),
 			self::FREQUENCY_WEEKLY  => __( 'Week', 'bigcommerce' ),
 			self::FREQUENCY_MONTHLY => __( 'Month', 'bigcommerce' ),
+			self::FREQUENCY_NEVER   => __( 'Never', 'bigcommerce' ),
 		];
 
 		$select = sprintf( '<select id="field-%s" name="%s" class="regular-text bc-field-choices">', esc_attr( self::OPTION_FREQUENCY ), esc_attr( self::OPTION_FREQUENCY ) );
@@ -182,20 +184,20 @@ class Import extends Settings_Section {
 	public function new_products_toggle() {
 		$current = get_option( self::OPTION_NEW_PRODUCTS, 1 );
 
-		printf( '<p class="description">%s</p>', __( 'Would you like the listings in your channel automatically populated?', 'bigcommerce' ) );
+		printf( '<p class="description">%s</p>', esc_html( __( 'Would you like the listings in your channel automatically populated?', 'bigcommerce' ) ) );
 
 		echo '<fieldset>';
 		printf(
 			'<p><label><input type="radio" name="%s" value="1" %s /> %s</label></p>',
 			esc_attr( self::OPTION_NEW_PRODUCTS ),
 			checked( 1, (int) $current, false ),
-			__( 'Yes, automatically list new BigCommerce products on this Channel', 'bigcommerce' )
+			esc_html( __( 'Yes, automatically list new BigCommerce products on this Channel', 'bigcommerce' ) )
 		);
 		printf(
 			'<p><label><input type="radio" name="%s" value="0" %s /> %s</label></p>',
 			esc_attr( self::OPTION_NEW_PRODUCTS ),
 			checked( 0, (int) $current, false ),
-			__( "No, I'll select which products should be listed on this Channel within BigCommerce", 'bigcommerce' )
+			esc_html( __( "No, I'll select which products should be listed on this Channel within BigCommerce", 'bigcommerce' ) )
 		);
 		echo '</fieldset>';
 	}

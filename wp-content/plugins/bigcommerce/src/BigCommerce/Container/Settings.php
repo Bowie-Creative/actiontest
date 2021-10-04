@@ -35,9 +35,9 @@ use BigCommerce\Settings\Sections\Nav_Menu_Options;
 use BigCommerce\Settings\Sections\New_Account_Section;
 use BigCommerce\Settings\Sections\Next_Steps;
 use BigCommerce\Settings\Sections\Onboarding_Import_Settings;
-use BigCommerce\Settings\Sections\Reviews;
+use BigCommerce\Settings\Sections\Reviews as Review_Settings;
 use BigCommerce\Settings\Sections\Troubleshooting_Diagnostics;
-use BigCommerce\Settings\Site_Update;
+use BigCommerce\Settings\Site_URL_Sync;
 use BigCommerce\Settings\Start_Over;
 use BigCommerce\Taxonomies\Channel\Channel;
 use Pimple\Container;
@@ -77,6 +77,7 @@ class Settings extends Provider {
 	const IMPORT_LIVE_STATUS  = 'settings.import_status_live';
 	const START_OVER          = 'settings.start_over';
 	const ONBOARDING_PROGRESS = 'settings.onboarding.progress_bar';
+	const SITE_URL_SYNC       = 'settings.site_url_sync';
 
 	const CONFIG_STATUS              = 'settings.configuration_status';
 	const CONFIG_DISPLAY_MENUS       = 'settings.configuration_display_menus';
@@ -237,7 +238,7 @@ class Settings extends Provider {
 
 	private function cart( Container $container ) {
 		$container[ self::CART_SECTION ] = function ( Container $container ) {
-			return new Cart_Settings( $container[ Pages::CART_PAGE ], $container[ Pages::CHECKOUT_PAGE ] );
+			return new Cart_Settings( $container[ Pages::CART_PAGE ], $container[ Pages::CHECKOUT_PAGE ], $container[ Pages::CHECKOUT_COMPLETE_PAGE ] );
 		};
 		add_action( 'bigcommerce/settings/register/screen=' . Settings_Screen::NAME, $this->create_callback( 'cart_settings_register', function () use ( $container ) {
 			$container[ self::CART_SECTION ]->register_settings_section();
@@ -371,6 +372,14 @@ class Settings extends Provider {
 		add_action( 'bigcommerce/settings/register/screen=' . Settings_Screen::NAME, $this->create_callback( 'accounts_settings_register', function () use ( $container ) {
 			$container[ self::ACCOUNTS_SECTION ]->register_settings_section();
 		} ), 50, 0 );
+
+		add_action( 'init', $this->create_callback( 'add_default_global_logins', function () use ( $container ) {
+			$container[ self::ACCOUNTS_SECTION ]->add_default_global_logins();
+		} ) );
+
+		add_action( 'update_option_' . Account_Settings::ALLOW_GLOBAL_LOGINS, $this->create_callback( 'update_allow_global_logins', function ( $old_value, $new_value ) use ( $container ) {
+			$container[ self::ACCOUNTS_SECTION ]->maybe_sync_global_logins( $old_value, $new_value );
+		} ), 10, 2 );
 	}
 
 	private function analytics( Container $container ) {
@@ -393,7 +402,7 @@ class Settings extends Provider {
 
 	private function reviews( Container $container ) {
 		$container[ self::REVIEWS_SECTION ] = function ( Container $container ) {
-			return new Reviews();
+			return new Review_Settings();
 		};
 
 		add_action( 'bigcommerce/settings/register/screen=' . Settings_Screen::NAME, $this->create_callback( 'review_settings_register', function () use ( $container ) {
@@ -630,6 +639,10 @@ class Settings extends Provider {
 			return new Troubleshooting_Diagnostics( $plugin_path );
 		};
 
+		$container[ self::SITE_URL_SYNC ] = function ( Container $container ) {
+			return new Site_URL_Sync( $container[ Taxonomies::ROUTES ] , $container[ self::SETTINGS_SCREEN ] );
+		};
+
 		add_action( 'bigcommerce/settings/register/screen=' . Settings_Screen::NAME, $this->create_callback( 'diagnostics_settings_register', function () use ( $container ) {
 			$container[ self::DIAGNOSTICS_SECTION ]->register_settings_section();
 		} ), 90, 0 );
@@ -642,6 +655,9 @@ class Settings extends Provider {
 			$container[ self::DIAGNOSTICS_SECTION ]->get_import_errors( $container[ Log::LOGGER ] );
 		} ), 10, 0 );
 
+		add_action( 'admin_post_' . Troubleshooting_Diagnostics::SYNC_SITE_URL, $this->create_callback( 'diagnostics_settings_sync_site_url_action', function () use ( $container ) {
+			$container[ self::SITE_URL_SYNC ]->sync();
+		} ), 10, 0 );
 	}
 
 	private function resources( Container $container ) {

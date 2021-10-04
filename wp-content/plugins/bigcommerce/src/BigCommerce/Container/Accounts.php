@@ -3,7 +3,7 @@
 
 namespace BigCommerce\Container;
 
-
+use BigCommerce\Accounts\Channel_Settings;
 use BigCommerce\Accounts\Countries;
 use BigCommerce\Accounts\Customer_Group_Proxy;
 use BigCommerce\Accounts\Nav_Menu;
@@ -15,18 +15,21 @@ use BigCommerce\Accounts\Sub_Nav;
 use BigCommerce\Accounts\User_Profile_Settings;
 use BigCommerce\Forms\Delete_Address_Handler;
 use BigCommerce\Accounts\Login;
+use BigCommerce\Api_Factory;
+use BigCommerce\Taxonomies\Channel\Connections;
 use Pimple\Container;
 
 class Accounts extends Provider {
-	const LOGIN          = 'accounts.login';
-	const COUNTRIES      = 'accounts.countries';
-	const COUNTRIES_PATH = 'accounts.countries.path';
-	const DELETE_ADDRESS = 'accounts.delete_address';
-	const NAV_MENU       = 'accounts.nav_menu';
-	const SUB_NAV        = 'accounts.sub_nav';
-	const USER_PROFILE   = 'accounts.user_profile';
-	const GROUP_PROXY    = 'accounts.groups.proxy';
-	const PASSWORD_RESET = 'accounts.password_reset';
+	const LOGIN            = 'accounts.login';
+	const COUNTRIES        = 'accounts.countries';
+	const COUNTRIES_PATH   = 'accounts.countries.path';
+	const DELETE_ADDRESS   = 'accounts.delete_address';
+	const NAV_MENU         = 'accounts.nav_menu';
+	const SUB_NAV          = 'accounts.sub_nav';
+	const USER_PROFILE     = 'accounts.user_profile';
+	const GROUP_PROXY      = 'accounts.groups.proxy';
+	const PASSWORD_RESET   = 'accounts.password_reset';
+	const CHANNEL_SETTINGS = 'accounts.channel_settings';
 
 	const PUBLIC_WISHLIST        = 'accounts.wishlist.public';
 	const WISHLIST_ROUTER        = 'accounts.wishlist.router';
@@ -45,6 +48,7 @@ class Accounts extends Provider {
 		$this->customer_groups( $container );
 		$this->wishlists( $container );
 		$this->passwords( $container );
+		$this->channel_settings( $container );
 	}
 
 	private function login( Container $container ) {
@@ -68,6 +72,10 @@ class Accounts extends Provider {
 			return $container[ self::LOGIN ]->lostpassword_url( $url, $redirect );
 		} ), 10, 2 );
 
+		add_filter( 'lostpassword_user_data', $this->create_callback( 'lostpassword_user_data', function ( $user_data, $errors ) use ( $container ) {
+			return $container[ self::LOGIN ]->before_reset_password_email( $user_data, $errors );
+		} ), 10, 2 );
+
 		add_action( 'lostpassword_post', $this->create_callback( 'lostpassword_post', function ( $error ) use ( $container ) {
 			return $container[ self::LOGIN ]->lostpassword_error_handler( $error );
 		} ), 10, 1 );
@@ -88,6 +96,7 @@ class Accounts extends Provider {
 
 			return $user;
 		} ), 40, 3 );
+
 		add_filter( 'check_password', $this->create_callback( 'check_password', function ( $match, $password, $hash, $user_id ) use ( $container ) {
 			if ( $container[ Api::CONFIG_COMPLETE ] ) {
 				return $container[ self::LOGIN ]->check_password_for_linked_accounts( $match, $password, $hash, $user_id );
@@ -248,6 +257,20 @@ class Accounts extends Provider {
 		add_action( 'profile_update', $this->create_callback( 'sync_changed_password', function ( $user, $old_user_data ) use ( $container ) {
 			$container[ self::PASSWORD_RESET ]->sync_password_change_with_bigcommerce( $user, $old_user_data );
 		} ), 10, 2 );
+	}
+	
+	private function channel_settings( Container $container ) {
+		$container[ self::CHANNEL_SETTINGS ] = function ( Container $container ) {
+			return new Channel_Settings( new Connections(), $container[ Api::FACTORY ]->customers() );
+		};
+
+		add_action( 'bigcommerce/sync_global_logins', $this->create_callback( 'sync_global_logins', function () use ( $container ) {
+			$container[ self::CHANNEL_SETTINGS ]->sync_global_logins();
+		} ) );
+						
+		add_action( 'bigcommerce/channel/promote', $this->create_callback( 'schedule_global_logins_sync', function () use ( $container ) {
+			$container[ self::CHANNEL_SETTINGS ]->schedule_sync();
+		} ) );
 	}
 
 }

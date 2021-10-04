@@ -5,10 +5,11 @@
 
 import Cookie from 'js-cookie';
 import _ from 'lodash';
-import { embedCheckout } from '@bigcommerce/checkout-sdk';
 import * as tools from 'utils/tools';
 import scrollTo from 'utils/dom/scroll-to';
+import { trigger } from 'utils/events';
 import { CART_ID_COOKIE_NAME, CART_ITEM_COUNT_COOKIE } from 'bcConstants/cookies';
+import bigcommerceConfig from 'bigcommerce_config';
 import { cartEmpty } from '../cart/cart-templates';
 
 const el = {
@@ -25,7 +26,7 @@ const clearCartData = () => {
 		return;
 	}
 
-	const cartMenuCount = tools.getNodes('.bigcommerce-cart__item-count', true, document, true);
+	const cartMenuCount = tools.getNodes('bc-cart-item-count', true);
 
 	_.delay(() => {
 		Cookie.remove(CART_ITEM_COUNT_COOKIE);
@@ -53,10 +54,33 @@ const scrollIframe = () => {
 };
 
 /**
+ * @function handleOrderCompleteEvents
+ * @description Clear the cart data and scroll the order into view on the page if the order is successfully completed.
+ */
+const handleOrderCompleteEvents = () => {
+	trigger({ event: 'bigcommerce/order_complete', data: { cart_id: Cookie.get(CART_ID_COOKIE_NAME) }, native: false });
+	clearCartData();
+	scrollIframe();
+};
+
+/**
+ * @function handleLogoutEvents
+ * @description Log the user out of wordpress if they have successfully logged out of BC via the Embedded Checkout SDK.
+ */
+const handleLogoutEvents = () => {
+	if (!bigcommerceConfig.logout_url) {
+		return;
+	}
+
+	window.location = bigcommerceConfig.logout_url;
+};
+
+/**
  * @function loadEmbeddedCheckout
  * @description Create an instance of the BC embedded checkout.
  */
-const loadEmbeddedCheckout = () => {
+const loadEmbeddedCheckout = async () => {
+	const checkoutCDN = await checkoutKitLoader.load('embedded-checkout');
 	// Load the config from the data attribute of the checkout container.
 	const config = JSON.parse(el.container.dataset.config);
 
@@ -67,11 +91,13 @@ const loadEmbeddedCheckout = () => {
 	}
 
 	// Set the onComplete callback to use the clearCartData function.
-	config.onComplete = clearCartData;
-	config.onComplete = scrollIframe;
+	config.onComplete = handleOrderCompleteEvents;
+
+	// Set the onComplete callback to use the clearCartData function.
+	config.onSignOut = handleLogoutEvents;
 
 	// Embed the checkout.
-	embedCheckout(config);
+	checkoutCDN.embedCheckout(config);
 };
 
 const init = () => {

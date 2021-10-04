@@ -3,29 +3,38 @@
 
 namespace BigCommerce\Templates;
 
-
 use BigCommerce\Customizer;
 use BigCommerce\Post_Types\Product\Product;
 use BigCommerce\Taxonomies\Brand\Brand;
 use BigCommerce\Taxonomies\Product_Category\Product_Category;
+use BigCommerce\Settings\Sections\Api_Credentials;
+use BigCommerce\Assets\Theme\Image_Sizes;
 
 class Product_Archive extends Controller {
 	const QUERY = 'query';
 
-	const POSTS       = 'posts';
-	const NO_RESULTS  = 'no_results';
-	const TITLE       = 'title';
-	const DESCRIPTION = 'description';
-	const REFINERY    = 'refinery';
-	const PAGINATION  = 'pagination';
-	const COLUMNS     = 'columns';
+	const POSTS          = 'posts';
+	const NO_RESULTS     = 'no_results';
+	const TITLE          = 'title';
+	const DESCRIPTION    = 'description';
+	const THUMBNAIL      = 'thumbnail';
+	const THUMBNAIL_SIZE = 'thumbnail';
+	const REFINERY       = 'refinery';
+	const PAGINATION     = 'pagination';
+	const COLUMNS        = 'columns';
 
 	protected $template = 'components/catalog/product-archive.php';
 
 	protected function parse_options( array $options ) {
 		$defaults = [
-			self::QUERY   => null, // \WP_Query
-			self::COLUMNS => absint( get_option( Customizer\Sections\Product_Archive::GRID_COLUMNS, 4 ) ),
+			self::QUERY          => null, // \WP_Query
+			self::COLUMNS        => absint( get_option( Customizer\Sections\Product_Archive::GRID_COLUMNS, 4 ) ),
+			/**
+			 * Filter the thumbnail size
+			 *
+			 * @param string $size The image size to use
+			 */
+			self::THUMBNAIL_SIZE => apply_filters( 'bigcommerce/template/product_archive/thumbnail_size', Image_Sizes::BC_CATEGORY_IMAGE ),
 		];
 
 		return wp_parse_args( $options, $defaults );
@@ -38,7 +47,8 @@ class Product_Archive extends Controller {
 		return [
 			self::POSTS       => $this->get_posts( $query ),
 			self::TITLE       => $this->get_title( $query ),
-			self::DESCRIPTION => $this->get_description( $query ),
+			self::DESCRIPTION => $this->get_description(),
+			self::THUMBNAIL   => $this->get_thumbnail(),
 			self::REFINERY    => $this->get_refinery( $query ),
 			self::PAGINATION  => $this->get_pagination( $query ),
 			self::COLUMNS     => $this->options[ self::COLUMNS ],
@@ -81,11 +91,36 @@ class Product_Archive extends Controller {
 		return $title;
 	}
 
-	private function get_description( \WP_Query $query ) {
-		$default     = '';
-		$description = get_option( Customizer\Sections\Product_Archive::ARCHIVE_DESCRIPTION, $default );
+	private function get_description() {
+		$description = get_the_archive_description();
+		$store_url   = bigcommerce_get_env( 'BIGCOMMERCE_API_URL' ) ?: get_option( Api_Credentials::OPTION_STORE_URL, '' );
+
+		preg_match( '#stores/([^\/]+)/#', untrailingslashit( $store_url ), $matches );
+		if ( ! empty( $matches[1] ) ) {
+			$description = str_replace( '%%GLOBAL_CdnStorePath%%', "https://cdn11.bigcommerce.com/s-{$matches[1]}", $description );
+		}
+
+		if ( empty( $description ) ) {
+			$description = get_option( Customizer\Sections\Product_Archive::ARCHIVE_DESCRIPTION, '' );
+		}
 
 		return $description;
+	}
+
+	private function get_thumbnail() {
+		$term = get_queried_object();
+
+		if ( ! is_a( $term, 'WP_Term' ) ) {
+			return '';
+		}
+
+		$attachment_id = get_term_meta( $term->term_id, 'thumbnail_id', true );
+
+		if ( $attachment_id ) {
+			return wp_get_attachment_image( $attachment_id, $this->options[ self::THUMBNAIL_SIZE ] );
+		}
+
+		return '';
 	}
 
 	private function get_refinery( \WP_Query $query ) {

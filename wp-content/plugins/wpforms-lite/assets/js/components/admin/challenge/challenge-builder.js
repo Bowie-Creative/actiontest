@@ -1,14 +1,13 @@
-/* globals WPFormsBuilder, ajaxurl */
+/* global WPForms, WPFormsBuilder, wpforms_challenge_admin, WPFormsFormEmbedWizard */
 /**
  * WPForms Challenge function.
  *
  * @since 1.5.0
+ * @since 1.6.2 Challenge v2
  */
 'use strict';
 
-if ( typeof WPFormsChallenge === 'undefined' ) {
-	var WPFormsChallenge = {};
-}
+var WPFormsChallenge = window.WPFormsChallenge || {};
 
 WPFormsChallenge.builder = window.WPFormsChallenge.builder || ( function( document, window, $ ) {
 
@@ -17,7 +16,7 @@ WPFormsChallenge.builder = window.WPFormsChallenge.builder || ( function( docume
 	 *
 	 * @since 1.5.0
 	 *
-	 * @type {Object}
+	 * @type {object}
 	 */
 	var app = {
 
@@ -28,8 +27,16 @@ WPFormsChallenge.builder = window.WPFormsChallenge.builder || ( function( docume
 		 */
 		init: function() {
 
-			$( document ).ready( app.ready );
-			$( window ).load( app.load );
+			$( app.ready );
+			$( window ).on( 'load', function() {
+
+				// in case of jQuery 3.+ we need to wait for an `ready` event first.
+				if ( typeof $.ready.then === 'function' ) {
+					$.ready.then( app.load );
+				} else {
+					app.load();
+				}
+			} );
 		},
 
 		/**
@@ -50,7 +57,10 @@ WPFormsChallenge.builder = window.WPFormsChallenge.builder || ( function( docume
 		 */
 		load: function() {
 
-			WPFormsChallenge.core.updateTooltipUI();
+			if ( [ 'started', 'paused' ].indexOf( wpforms_challenge_admin.option.status ) > -1 ) {
+				WPFormsChallenge.core.updateTooltipUI();
+				app.gotoStep();
+			}
 
 			$( '.wpforms-challenge' ).show();
 		},
@@ -62,16 +72,23 @@ WPFormsChallenge.builder = window.WPFormsChallenge.builder || ( function( docume
 		 */
 		setup: function() {
 
+			if ( wpforms_challenge_admin.option.status === 'inited' ) {
+				WPFormsChallenge.core.clearLocalStorage();
+				app.showWelcomePopup();
+			}
+
+			$( '#wpforms-embed' ).addClass( 'wpforms-disabled' );
+
 			var tooltipAnchors = [
 				'#wpforms-setup-name',
-				'.wpforms-setup-title.core',
-				'.wpforms-add-fields-heading[data-group="standard"] span',
-				'#wpforms-panel-field-settings-notification_enable-wrap',
+				'.wpforms-setup-title .wpforms-setup-title-after',
+				'#add-fields a i',
+				'#wpforms-builder-settings-notifications-title',
 			];
 
 			$.each( tooltipAnchors, function( i, anchor ) {
 
-				WPFormsChallenge.core.initTooltips( i + 1, anchor );
+				WPFormsChallenge.core.initTooltips( i + 1, anchor, null );
 			} );
 		},
 
@@ -82,43 +99,101 @@ WPFormsChallenge.builder = window.WPFormsChallenge.builder || ( function( docume
 		 */
 		events: function() {
 
+			// Start the Challenge.
+			$( '#wpforms-challenge-welcome-builder-popup' ).on( 'click', 'button', app.startChallenge );
+
+			// Step 1.
+			$( '.wpforms-challenge-step1-done' ).on( 'click', function() {
+				WPFormsChallenge.core.stepCompleted( 1 );
+			} );
+
 			$( '#wpforms-builder' )
-				.off( 'click', '.wpforms-template-select' ) // Intercept Form Builder's form template selection and apply own logic.
-				.on( 'click', '.wpforms-template-select', function( e ) {
-					app.builderTemplateSelect( this, e );
+
+				// Register select template event when the setup panel is ready.
+				.on( 'wpformsBuilderSetupReady', function() {
+					app.eventSelectTemplate();
 				} )
+
+				// Restore tooltips when switching builder panels/sections.
 				.on( 'wpformsPanelSwitch wpformsPanelSectionSwitch', function() {
 					WPFormsChallenge.core.updateTooltipUI();
 				} );
 
-			$( '.wpforms-challenge-step1-done' ).click( function() {
-				WPFormsChallenge.core.stepCompleted( 1 );
-			} );
-
-			$( '.wpforms-challenge-step3-done' ).click( function() {
+			// Step 3 - Add fields.
+			$( '.wpforms-challenge-step3-done' ).on( 'click', function() {
 				WPFormsChallenge.core.stepCompleted( 3 );
-				WPFormsBuilder.panelSwitch( 'settings' );
-				WPFormsBuilder.panelSectionSwitch( $( '.wpforms-panel .wpforms-panel-sidebar-section-notifications' ) );
+				app.gotoStep( 4 );
 			} );
 
-			$( 'body' ).on( 'click', '.wpforms-challenge-step4-done', function() {
-				WPFormsChallenge.core.stepCompleted( 4 );
-				app.saveFormAndRedirect();
+			// Step 4 - Notifications.
+			$( document ).on( 'click', '.wpforms-challenge-step4-done', app.showEmbedPopup );
+
+			// Tooltipster ready.
+			$.tooltipster.on( 'ready', app.tooltipsterReady );
+		},
+
+		/**
+		 * Register select template event.
+		 *
+		 * @since 1.6.8
+		 */
+		eventSelectTemplate: function() {
+
+			$( '#wpforms-panel-setup' )
+
+				// Step 2 - Select the Form template.
+				.off( 'click', '.wpforms-template-select' ) // Intercept Form Builder's form template selection and apply own logic.
+				.on( 'click', '.wpforms-template-select', function( e ) {
+					app.builderTemplateSelect( this, e );
+				} );
+		},
+
+		/**
+		 * Start the Challenge.
+		 *
+		 * @since 1.6.2
+		 */
+		startChallenge: function() {
+
+			WPFormsChallenge.admin.saveChallengeOption( { status: 'started' } );
+			WPFormsChallenge.core.initListUI( 'started' );
+			$( '.wpforms-challenge-popup-container' ).fadeOut( function() {
+				$( '#wpforms-challenge-welcome-builder-popup' ).hide();
 			} );
+			WPFormsChallenge.core.timer.run( WPFormsChallenge.core.timer.initialSecondsLeft );
+			WPFormsChallenge.core.updateTooltipUI();
+		},
 
-			$.tooltipster.on( 'ready', function( event ) {
+		/**
+		 * Go to Step.
+		 *
+		 * @since 1.6.2
+		 *
+		 * @param {number|string} step Last saved step.
+		 */
+		gotoStep: function( step ) { // eslint-disable-line
 
-				var step = $( event.origin ).data( 'wpforms-challenge-step' );
-				var formId = $( '#wpforms-builder-form' ).data( 'id' );
+			step = step || ( WPFormsChallenge.core.loadStep() + 1 );
 
-				step = parseInt( step, 10 ) || 0;
-				formId = parseInt( formId, 10 ) || 0;
+			switch ( step ) {
+				case 1:
+				case 2:
+					WPFormsBuilder.panelSwitch( 'setup' );
+					break;
 
-				// Save challenge form ID right after it's created.
-				if ( 3 === step && formId > 0 ) {
-					WPFormsChallenge.admin.saveChallengeOption( { form_id: formId } );
-				}
-			} );
+				case 3:
+					WPFormsBuilder.panelSwitch( 'fields' );
+					break;
+
+				case 4:
+					WPFormsBuilder.panelSwitch( 'settings' );
+					WPFormsBuilder.panelSectionSwitch( $( '.wpforms-panel .wpforms-panel-sidebar-section-notifications' ) );
+					break;
+
+				case 5:
+					app.showEmbedPopup();
+					break;
+			}
 		},
 
 		/**
@@ -127,55 +202,66 @@ WPFormsChallenge.builder = window.WPFormsChallenge.builder || ( function( docume
 		 * @since 1.5.0
 		 *
 		 * @param {string} el Element selector.
-		 * @param {Object} e Event.
+		 * @param {object} e  Event.
 		 */
 		builderTemplateSelect: function( el, e ) {
 
+			if ( wpforms_challenge_admin.option.status === 'paused' ) {
+				WPFormsChallenge.core.resumeChallenge();
+			}
+
 			var step = WPFormsChallenge.core.loadStep();
 
-			if ( 0 === step || 1 === step ) {
+			if ( step <= 1 ) {
 				WPFormsChallenge.core.stepCompleted( 2 )
-					.done( WPFormsBuilder.templateSelect.bind( null, el, e ) );
+					.done( WPForms.Admin.Builder.Setup.selectTemplate.bind( null, e ) );
 				return;
 			}
 
-			WPFormsBuilder.templateSelect( el, e );
+			WPForms.Admin.Builder.Setup.selectTemplate.bind( null, e );
 		},
 
 		/**
-		 * Save the form and redirect to form embed page.
+		 * Tooltipster ready event callback.
 		 *
-		 * @since 1.5.0
+		 * @since 1.6.2
+		 *
+		 * @param {object} e Event object.
 		 */
-		saveFormAndRedirect: function() {
+		tooltipsterReady: function( e ) {
 
-			WPFormsBuilder.formSave().success( app.embedPageRedirect );
-		},
+			var step = $( e.origin ).data( 'wpforms-challenge-step' );
+			var formId = $( '#wpforms-builder-form' ).data( 'id' );
 
-		/**
-		 * Redirect to form embed page.
-		 *
-		 * @since 1.5.0
-		 *
-		 * @param {Object} formSaveResponse AJAX response from a form saving method.
-		 */
-		embedPageRedirect: function( formSaveResponse ) {
+			step = parseInt( step, 10 ) || 0;
+			formId = parseInt( formId, 10 ) || 0;
 
-			// Do not redirect if the form wasn't saved correctly.
-			if ( ! formSaveResponse.success ) {
-				return;
+			// Save challenge form ID right after it's created.
+			if ( 3 === step && formId > 0 ) {
+				WPFormsChallenge.admin.saveChallengeOption( { form_id: formId } ); // eslint-disable-line camelcase
 			}
+		},
 
-			var data = {
-				action  : 'wpforms_challenge_embed_page_url',
-				_wpnonce: WPFormsChallenge.admin.l10n.nonce,
-			};
+		/**
+		 * Display 'Welcome to the Form Builder' popup.
+		 *
+		 * @since 1.6.2
+		 */
+		showWelcomePopup: function() {
 
-			$.post( ajaxurl, data, function( response ) {
-				if ( response.success ) {
-					window.location = response.data;
-				}
-			} );
+			$( '#wpforms-challenge-welcome-builder-popup' ).show();
+			$( '.wpforms-challenge-popup-container' ).fadeIn();
+		},
+
+		/**
+		 * Display 'Embed in a Page' popup.
+		 *
+		 * @since 1.6.2
+		 */
+		showEmbedPopup: function() {
+
+			WPFormsChallenge.core.stepCompleted( 4 );
+			WPFormsFormEmbedWizard.openPopup();
 		},
 	};
 

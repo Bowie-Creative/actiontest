@@ -10,6 +10,7 @@ use BigCommerce\Api\Customer_Api;
 use BigCommerce\Api\Marketing_Api;
 use BigCommerce\Api\Payments_Api;
 use BigCommerce\Api\Shipping_Api;
+use BigCommerce\Api\Banners_Api;
 use BigCommerce\Api\Store_Api;
 use BigCommerce\Api\Tax_Class_Api;
 use BigCommerce\Api\v3\Api\PricingApi;
@@ -27,6 +28,7 @@ use BigCommerce\Api\v3\Api\ThemeRegionsApi;
 use BigCommerce\Api\v3\Api\ThemesApi;
 use BigCommerce\Api\v3\Api\WidgetApi;
 use BigCommerce\Api\v3\Api\WidgetTemplateApi;
+use BigCommerce\Api\v3\Api\CheckoutApi;
 use BigCommerce\Container\Api;
 
 class Api_Factory {
@@ -77,6 +79,13 @@ class Api_Factory {
 	}
 
 	/**
+	 * @return Customer_Api
+	 */
+	public function customer() {
+		return new Customer_Api( $this->api_client );
+	}
+
+	/**
 	 * @return CustomersApi
 	 */
 	public function customers() {
@@ -91,26 +100,10 @@ class Api_Factory {
 	}
 
 	/**
-	 * @return WidgetApi
-	 * @deprecated 3.4.0 Use Api_Factory::widget()
-	 */
-	public function placement() {
-		return $this->widget();
-	}
-
-	/**
 	 * @return PricingApi
 	 */
 	public function pricing() {
 		return new PricingApi( $this->api_client );
-	}
-
-	/**
-	 * @return WidgetApi
-	 * @deprecated 3.4.0 Use Api_Factory::widget()
-	 */
-	public function themeRegions() {
-		return $this->widget();
 	}
 
 	/**
@@ -132,21 +125,6 @@ class Api_Factory {
 	 */
 	public function wishlists() {
 		return new WishlistsApi( $this->api_client );
-	}
-
-	/**
-	 * @return WidgetApi
-	 * @deprecated 3.4.0 Use Api_Factory::widget()
-	 */
-	public function widgetTemplate() {
-		return $this->widget();
-	}
-
-	/**
-	 * @return Customer_Api
-	 */
-	public function customer() {
-		return new Customer_Api( $this->api_client );
 	}
 
 	/**
@@ -190,11 +168,26 @@ class Api_Factory {
 	public function payments() {
 		return new Payments_Api( $this->api_client );
 	}
+
 	/**
 	 * @return Currencies_Api
 	 */
 	public function currencies() {
 		return new Currencies_Api( $this->api_client );
+	}
+	
+	/**
+	 * @return CheckoutApi
+	 */
+	public function checkout() {
+		return new CheckoutApi( $this->api_client );
+	}
+
+	/**
+	 * @return Banners_Api
+	 */
+	public function banners() {
+		return new Banners_Api( $this->api_client );
 	}
 
 	/**
