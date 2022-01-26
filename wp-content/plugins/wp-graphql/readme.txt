@@ -4,7 +4,7 @@ Tags: GraphQL, API, Gatsby, Headless, Decoupled, React, Nextjs, Vue, Apollo, RES
 Requires at least: 5.0
 Tested up to: 5.8
 Requires PHP: 7.1
-Stable tag: 1.6.5
+Stable tag: 1.6.10
 License: GPL-3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -77,6 +77,36 @@ Gatsby and WP Engine both believe that a strong GraphQL API for WordPress is a b
 
 == Upgrade Notice ==
 
+= 1.6.7 =
+
+There's been a bugfix in the Post Model layer which _might_ break existing behaviors.
+
+WordPress Post Type registry allows for a post_type to be registered as `public` (`true` or `false`)
+and `publicly_queryable` (`true` or `false`).
+
+WPGraphQL's Model Layer was allowing published content of any post_type to be exposed publicly. This
+change better respects the `public` and `publicly_queryable` properties of post types better.
+
+Now, if a post_type is `public=>true`, published content of that post_type can be queried by public
+WPGraphQL requests.
+
+If a `post_type` is set to `public=>false`, then we fallback to the `publicly_queryable` property.
+If a post_type is set to `publicly_queryable => true`, then published content of the Post Type can
+be queried in WPGraphQL by public users.
+
+If both `public=>false` and `publicly_queryable` is `false` or not defined, then the content of the
+post_type will only be accessible via authenticated queries by users with proper capabilities to
+access the post_type.
+
+**Possible Action:** You might need to adjust your post_type registration to better reflect your intent.
+
+- `public=>true`: The entries in the post_type will be public in WPGraphQL and will have a public
+URI in WordPress.
+- `public=>false, publicly_queryable=>true`: The entries in the post_type will be public in WPGraphQL,
+but will not have individually respected URI from WordPress, and can not be queried by URI in WPGraphQL.
+- `public=>false,publicly_queryable=>false`: The entries in the post_type will only be accessible in
+WPGraphQL by authenticated requests for users with proper capabilities to interact with the post_type.
+
 = 1.5.0 =
 
 The `MenuItem.path` field was changed from `non-null` to nullable and some clients may need to make adjustments to support this.
@@ -90,6 +120,56 @@ The `uri` field was non-null on some Types in the Schema but has been changed to
 Composer dependencies are no longer versioned in Github. Recommended install source is WordPress.org or using Composer to get the code from Packagist.org or WPackagist.org.
 
 == Changelog ==
+
+= 1.6.10 =
+
+- Updating stable tag for WordPress.org
+
+= 1.6.9 =
+
+- No functional changes from v1.6.8. Fixing an issue with deploy to WordPress.org
+
+= 1.6.8 =
+
+**Chores / Bugfixes**
+
+- ([#2143](https://github.com/wp-graphql/wp-graphql/pull/2143)): Adds `taxonomyName` field to the `TermNode` interface. Thanks @jeanfredrik!
+- ([#2168](https://github.com/wp-graphql/wp-graphql/pull/2168)): Allows the GraphiQL screen markup to be filtered
+- ([#2150](https://github.com/wp-graphql/wp-graphql/pull/2150)): Updates GraphiQL npm dependency to v1.4.7
+- ([#2145](https://github.com/wp-graphql/wp-graphql/pull/2145)): Fixes a bug with cursor pagination stability
+
+
+**New Features**
+
+- ([#2141](https://github.com/wp-graphql/wp-graphql/pull/2141)): Adds a new `graphql_wp_connection_type_config` filter to allow customizing connection configurations. Thanks @justlevine!
+
+
+= 1.6.7
+
+**Chores / Bugfixes**
+
+- ([#2135](https://github.com/wp-graphql/wp-graphql/pull/2135)): Fixes permission check in the Post model layer. Posts of a `'publicly_queryable' => true` post_type can be queried publicly (non-authenticated requests) via WPGraphQL, even if the post_type is set to `'public' => false`. Thanks @kellenmace!
+- ([#2093](https://github.com/wp-graphql/wp-graphql/pull/2093)): Fixes `Post.pinged` field to properly return an array. Thanks @justlevine!
+- ([#2132](https://github.com/wp-graphql/wp-graphql/pull/2132)): Fix issue where querying posts by slug could erroneously return null. Thanks @ChrisWiegman!
+- ([#2127](https://github.com/wp-graphql/wp-graphql/pull/2127)): Update endpoint in documentation examples. Thanks @RafidMuhyim!
+
+
+= 1.6.6
+
+**New Features**
+
+- ([#2106](https://github.com/wp-graphql/wp-graphql/pull/2106)): Add new `pre_graphql_execute_request` filter to better support full query caching. Thanks @markkelnar!
+- ([#2123](https://github.com/wp-graphql/wp-graphql/pull/2123)): Add new `graphql_dataloader_get_cached` filter to better support persistent object caching in the Model Layer. Thanks @kidunot89!
+
+**Chores / Bugfixes**
+
+- ([#2094](https://github.com/wp-graphql/wp-graphql/pull/2094)): fix broken link in docs. Thanks @duffn!
+- ([#2108](https://github.com/wp-graphql/wp-graphql/pull/2108)): Update lucatume/wp-browser dependency. Thanks @markkelnar!
+- ([#2111](https://github.com/wp-graphql/wp-graphql/pull/2111)): Correct variable name passed to filter. Thanks @markkelnar!
+- ([#2112](https://github.com/wp-graphql/wp-graphql/pull/2112)): Doc typo corrections. Thanks @nexxai!
+- ([#2115](https://github.com/wp-graphql/wp-graphql/pull/2115)): Updates to GraphiQL npm dependencies. Thanks @alexghirelli!
+- ([#2124](https://github.com/wp-graphql/wp-graphql/pull/2124)): Updates `tmpl` npm dependency.
+
 
 = 1.6.5
 

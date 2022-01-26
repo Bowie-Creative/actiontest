@@ -13,6 +13,7 @@ use BigCommerce\Rest\Reviews_Listing_Controller;
 use BigCommerce\Rest\Shortcode_Controller;
 use BigCommerce\Rest\Shipping_Controller;
 use BigCommerce\Rest\Coupon_Code_Controller;
+use BigCommerce\Reviews\Review_Fetcher;
 use Pimple\Container;
 
 class Rest extends Provider {
@@ -42,7 +43,7 @@ class Rest extends Provider {
 
 	const SHIPPING_BASE = 'rest.shipping_base';
 	const SHIPPING      = 'rest.shipping';
-	
+
 	const COUPON_CODE_BASE = 'rest.coupon_code_base';
 	const COUPON_CODE      = 'rest.coupon_code';
 
@@ -50,14 +51,29 @@ class Rest extends Provider {
 
 	public function register( Container $container ) {
 		$container[ self::NAMESPACE_BASE ] = function ( Container $container ) {
+			/**
+			 * Filters REST namespace base.
+			 *
+			 * @param string $namespace Namespace.
+			 */
 			return apply_filters( 'bigcommerce/rest/namespace_base', 'bigcommerce' );
 		};
 
 		$container[ self::VERSION ] = function ( Container $container ) {
+			/**
+			 * Filters REST version.
+			 *
+			 * @param int $version Version.
+			 */
 			return apply_filters( 'bigcommerce/rest/version', $this->version );
 		};
 
 		$container[ self::CART_BASE ] = function ( Container $container ) {
+			/**
+			 * Filters REST cart base.
+			 *
+			 * @param string $cart Cart base.
+			 */
 			return apply_filters( 'bigcommerce/rest/cart_base', 'cart' );
 		};
 
@@ -66,6 +82,11 @@ class Rest extends Provider {
 		};
 
 		$container[ self::PRODUCTS_BASE ] = function ( Container $container ) {
+			/**
+			 * Filters REST products base.
+			 *
+			 * @param string $products Products base.
+			 */
 			return apply_filters( 'bigcommerce/rest/products_base', 'products' );
 		};
 
@@ -74,6 +95,11 @@ class Rest extends Provider {
 		};
 
 		$container[ self::SHORTCODE_BASE ] = function ( Container $container ) {
+			/**
+			 * Filters REST shortcode base.
+			 *
+			 * @param string $shortcode Shortcode base.
+			 */
 			return apply_filters( 'bigcommerce/rest/shortcode_base', 'shortcode' );
 		};
 
@@ -82,6 +108,11 @@ class Rest extends Provider {
 		};
 
 		$container[ self::ORDERS_SHORTCODE_BASE ] = function ( Container $container ) {
+			/**
+			 * Filters REST orders shortcode base.
+			 *
+			 * @param string $orders_shortcode Orders shortcode base.
+			 */
 			return apply_filters( 'bigcommerce/rest/orders_shortcode_base', 'orders-shortcode' );
 		};
 
@@ -90,6 +121,11 @@ class Rest extends Provider {
 		};
 
 		$container[ self::COMPONENT_SHORTCODE_BASE ] = function ( Container $container ) {
+			/**
+			 * Filters REST product component shortcode base.
+			 *
+			 * @param string $component_shortcode Component shortcode base.
+			 */
 			return apply_filters( 'bigcommerce/rest/product_component_shortcode_base', 'component-shortcode' );
 		};
 
@@ -98,14 +134,24 @@ class Rest extends Provider {
 		};
 
 		$container[ self::REVIEW_LIST_BASE ] = function ( Container $container ) {
+			/**
+			 * Filters REST review list base.
+			 *
+			 * @param string $product_reviews Product reviews base.
+			 */
 			return apply_filters( 'bigcommerce/rest/review_list_base', 'product-reviews' );
 		};
 
 		$container[ self::REVIEW_LIST ] = function ( Container $container ) {
-			return new Reviews_Listing_Controller( $container[ self::NAMESPACE_BASE ], $container[ self::VERSION ], $container[ self::REVIEW_LIST_BASE ], $container[ Api::FACTORY ]->catalog() );
+			return new Reviews_Listing_Controller( $container[ self::NAMESPACE_BASE ], $container[ self::VERSION ], $container[ self::REVIEW_LIST_BASE ], $container[ Reviews::FETCHER ] );
 		};
 
 		$container[ self::PRICING_BASE ] = function ( Container $container ) {
+			/**
+			 * Filters REST pricing base.
+			 *
+			 * @param string $pricing Pricing base.
+			 */
 			return apply_filters( 'bigcommerce/rest/pricing_base', 'pricing' );
 		};
 
@@ -114,14 +160,24 @@ class Rest extends Provider {
 		};
 
 		$container[ self::SHIPPING_BASE ] = function ( Container $container ) {
+			/**
+			 * Filters REST shipping base.
+			 *
+			 * @param string $shipping Shipping base.
+			 */
 			return apply_filters( 'bigcommerce/rest/shipping_base', 'shipping' );
 		};
 
 		$container[ self::SHIPPING ] = function ( Container $container ) {
 			return new Shipping_Controller( $container[ self::NAMESPACE_BASE ], $container[ self::VERSION ], $container[ self::SHIPPING_BASE ], $container[ Api::FACTORY ]->shipping(), $container[ Api::FACTORY ]->cart() );
 		};
-		
+
 		$container[ self::COUPON_CODE_BASE ] = function ( Container $container ) {
+			/**
+			 * Filters REST coupon code base.
+			 *
+			 * @param string $coupon_code Coupon code base.
+			 */
 			return apply_filters( 'bigcommerce/rest/coupon_code', 'coupon-code' );
 		};
 
@@ -156,7 +212,7 @@ class Rest extends Provider {
 		add_filter( 'bigcommerce/js_config', $this->create_callback( 'shipping_js_config', function( $config ) use ( $container ) {
 			return $container[ self::SHIPPING ]->js_config( $config );
 		}), 10, 1 );
-		
+
 		add_filter( 'bigcommerce/js_config', $this->create_callback( 'coupon_code_js_config', function( $config ) use ( $container ) {
 			return $container[ self::COUPON_CODE ]->js_config( $config );
 		}), 10, 1 );

@@ -25,8 +25,10 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 	const NAME             = 'bigcommerce_diagnostics';
 	const DIAGNOSTICS_ID   = 'bigcommerce_diagnostics_id';
 	const DIAGNOSTICS_NAME = 'bigcommerce_diagnostics_name';
+	const ABORT_NAME       = 'bigcommerce_diagnostics_import_abort';
 	const TEXTBOX_NAME     = 'bigcommerce_diagnostics_output';
 	const LOG_ERRORS       = 'bigcommerce_diagnostics_log_import_errors';
+	const LOG_FILE_SIZE    = 'bigcommerce_diagnostics_log_file_size';
 	const SYNC_SITE_URL    = 'bigcommerce_diagnostics_sync_site_url';
 
 	const AJAX_ACTION               = 'bigcommerce_support_data';
@@ -57,6 +59,20 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 		);
 
 		add_settings_field(
+			self::ABORT_NAME,
+			esc_html( __( 'Abort product import', 'bigcommerce' ) ),
+			[ $this, 'render_import_abort', ],
+			Settings_Screen::NAME,
+			self::NAME,
+			[
+					'type'        => 'checkbox',
+					'option'      => self::ABORT_NAME,
+					'label'       => __( 'Abort product import', 'bigcommerce' ),
+					'description' => __( 'Stops product import process', 'bigcommerce' ),
+			]
+		);
+
+		add_settings_field(
 			self::SYNC_SITE_URL,
 			esc_html( __( 'Sync Site URL', 'bigcommerce' ) ),
 			[ $this, 'render_sync_site_url', ],
@@ -74,7 +90,7 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 			Settings_Screen::NAME,
 			self::LOG_ERRORS
 		);
-		
+
 		add_settings_field(
 			self::LOG_ERRORS,
 			esc_html( __( 'Log import errors', 'bigcommerce' ) ),
@@ -86,6 +102,27 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 				'option'      => self::LOG_ERRORS,
 				'label'       => esc_html( __( 'Enable Error Logs', 'bigcommerce' ) ),
 				'description' => esc_html( __( 'If enabled, will log import error messages to /wp-content/uploads/logs/bigcommerce/debug.log. If you want to use a different path please define BIGCOMMERCE_DEBUG_LOG in your wp-config.php with the desired writeable path.', 'bigcommerce' ) ),
+			]
+		);
+
+		register_setting(
+			Settings_Screen::NAME,
+			self::LOG_FILE_SIZE
+		);
+
+		add_settings_field(
+			self::LOG_FILE_SIZE,
+			esc_html( __( 'Log file max size(MB)', 'bigcommerce' ) ),
+			[ $this, 'render_log_file_size', ],
+			Settings_Screen::NAME,
+			self::NAME,
+			[
+				'min'         => 1,
+				'max'         => 25,
+				'type'        => 'number',
+				'option'      => self::LOG_FILE_SIZE,
+				'label'       => esc_html( __( 'Set log file size', 'bigcommerce' ) ),
+				'description' => esc_html( __( 'Set log file max size in MB. If log file exceeds the limit it will be cleaned before new import', 'bigcommerce' ) ),
 			]
 		);
 
@@ -104,6 +141,17 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 		);
 
 
+	}
+
+	/**
+	 * Renders import abort button
+	 *
+	 * @param $args
+	 */
+	public function render_import_abort( $args ) {
+		$url  = add_query_arg( [ 'action' => self::ABORT_NAME, '_wpnonce' => wp_create_nonce( self::ABORT_NAME ) ], admin_url( 'admin-post.php' ) );
+		$link = sprintf( '<a href="%s" class="bc-admin-btn">%s</a>', esc_url( $url ), esc_attr( $args['label'] ) );
+		printf( '%s<p class="description">%s</p>', $link, esc_html( $args['description'] ) );
 	}
 
 	public function render_sync_site_url( $args ) {
@@ -133,6 +181,14 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 		$value    = (bool) get_option( $args[ 'option' ], false );
 		$checkbox = sprintf( '<label for="%2$s"><input type="%1$s" value="1" class="regular-text code" name="%2$s" id="%2$s" %3$s/> %4$s</label>', esc_attr( $args[ 'type' ] ), esc_attr( $args[ 'option' ] ), checked( true, $value, false ), esc_attr( $args[ 'label' ] ) );
 		printf( '%s<p class="description">%s</p>', $checkbox, esc_html( $args[ 'description' ] ) );
+	}
+
+	public function render_log_file_size( $args ) {
+		$value = get_option( $args[ 'option' ], 25 );
+		$min   = isset( $args[ 'min' ] ) ? sprintf( 'min="%d"', $args[ 'min' ] ) : '';
+		$max   = isset( $args[ 'max' ] ) ? sprintf( 'max="%d"', $args[ 'max' ] ) : '';
+		$field = sprintf( '<input type="%1$s" value="%2$s" name="%3$s" id="%3$s" %4$s %5$s />', esc_attr( $args[ 'type' ] ), esc_attr( $value ), esc_attr( $args[ 'option' ] ), $min, $max );
+		printf( '%s<p class="description">%s</p>', $field, esc_html( $args[ 'description' ] ) );
 	}
 
 	/**
@@ -429,6 +485,11 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 	 * @return array A list of template overrides in the active theme
 	 */
 	private function get_template_overrides() {
+		/**
+		 * Filters template directory theme.
+		 *
+		 * @param string $theme_override_dir Theme directory.
+		 */
 		$theme_override_dir = apply_filters( 'bigcommerce/template/directory/theme', '', '' );
 
 		$theme_parent_dir_path = trailingslashit( TEMPLATEPATH ) . $theme_override_dir;
@@ -464,7 +525,7 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 	 * @return array A list of template overrides in the active theme with notes
 	 */
 	private function check_template_overrides( $overrides ) {
-		
+
 		$messages = [];
 
 		// Get original template for each override and compare versions.
@@ -517,13 +578,16 @@ class Troubleshooting_Diagnostics extends Settings_Section {
 	 * @return string
 	 */
 	private function get_original_template_path_from_override( $override ) {
+		/**
+		 * This filter is documented in src/BigCommerce/Settings/Sections/Troubleshooting_Diagnostics.php.
+		 */
 		$theme_override_dir = apply_filters( 'bigcommerce/template/directory/theme', '', '' );
 
 		// Get everything after $theme_override_dir in the string.
 		$original_template = substr(
 			$override,
 			strpos( $override, $theme_override_dir ) + strlen( $theme_override_dir ) + 1
-		); 
+		);
 
 		return "{$this->plugin_path}templates/public/{$original_template}";
 	}

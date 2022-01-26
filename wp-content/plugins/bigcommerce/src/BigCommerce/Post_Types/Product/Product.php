@@ -96,7 +96,7 @@ class Product {
 
 	public function condition() {
 		$terms = get_the_terms( $this->post_id, Condition::NAME );
-		if ( empty( $terms ) ) {
+		if ( empty( $terms ) || is_bool( $terms ) ) {
 			return '';
 		}
 
@@ -460,6 +460,12 @@ class Product {
 		$cart     = get_option( Cart::OPTION_ENABLE_CART, true );
 		$class    = 'bc-btn bc-btn--form-submit';
 
+		/**
+		 * Filters purchase button attributes.
+		 *
+		 * @param array   $attributes Attributes.
+		 * @param Product $product    Product.
+		 */
 		$attributes = apply_filters( 'bigcommerce/button/purchase/attributes', [], $this );
 		$attributes = implode( ' ', array_map( function ( $attribute, $value ) {
 			$attribute  = sanitize_title_with_dashes( $attribute );
@@ -480,6 +486,13 @@ class Product {
 		}
 		$button = sprintf( '<button class="%s" type="submit" data-js="%d" %s %s>%s</button>', $class, $this->bc_id(), $options, $attributes, $label );
 
+		/**
+		 * Filters purchase button.
+		 *
+		 * @param string $button  Button html.
+		 * @param int    $post_id Post id.
+		 * @param string $label   Label.
+		 */
 		return apply_filters( 'bigcommerce/button/purchase', $button, $this->post_id, $label );
 	}
 
@@ -553,8 +566,10 @@ class Product {
 	 * @return string
 	 */
 	public function availability() {
-		$terms = get_the_terms( $this->post_id, Availability::NAME );
-		if ( ! $terms || is_wp_error( $terms ) ) {
+		$terms               = get_the_terms( $this->post_id, Availability::NAME );
+		$terms_empty_boolean = empty( $terms ) || is_bool( $terms );
+
+		if ( $terms_empty_boolean || is_wp_error( $terms ) ) {
 			return Availability::AVAILABLE;
 		}
 
@@ -709,7 +724,7 @@ class Product {
 	 */
 	public function get_channel() {
 		$channels = get_the_terms( $this->post_id(), Channel::NAME );
-		if ( empty( $channels ) ) {
+		if ( empty( $channels ) || is_bool( $channels ) ) {
 			$connections = new Connections();
 
 			return $connections->current();
@@ -751,7 +766,7 @@ class Product {
 
 		return self::by_product_meta( 'bigcommerce_id', absint( $product_id ), $channel, $query_args );
 	}
-	
+
 	/**
 	 * Gets a BigCommerce Product SKU and returns matching Product object
 	 *
@@ -771,7 +786,7 @@ class Product {
 
 		return self::by_product_meta( 'bigcommerce_sku', sanitize_text_field( $product_sku ), $channel, $query_args );
 	}
-	
+
 	/**
 	 * Gets a BigCommerce Product by meta
 	 *

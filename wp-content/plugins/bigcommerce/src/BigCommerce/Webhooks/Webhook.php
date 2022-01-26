@@ -48,7 +48,9 @@ abstract class Webhook {
 	 * @return string|bool|null The value, or false or null if filter_input fails.
 	 */
 	public function get_auth_header() {
-		return filter_input( INPUT_SERVER, self::INPUT_AUTH_HEADER, FILTER_UNSAFE_RAW ); // phpcs:ignore
+		// On some envs filter_input(https://bugs.php.net/bug.php?id=49184) may return NULL value even if variable exists
+		// In order to prevent the issue we use filter_var for a $_SERVER variable
+		return filter_var( $_SERVER[ self::INPUT_AUTH_HEADER ], FILTER_UNSAFE_RAW );
 	}
 
 	/**
@@ -63,12 +65,60 @@ abstract class Webhook {
 	}
 
 	/**
+	 * Check by destination and scope if webhook is already added to BigCommerce.
+	 * Returns the id of the webhook
+	 *
+	 * @return mixed|null
+	 */
+	public function is_webhook_exist() {
+		$webhooks = $this->api_client->listWebhooks();
+
+		$scope = $this->scope();
+		$destination = $this->destination();
+
+		$found_hooks = array_map(function ( $hook ) use ( $scope, $destination ) {
+			$exists = $hook->scope === $scope && $hook->destination === $destination;
+			$is_active = $hook->is_active === true;
+
+			return $exists && $is_active ? $hook->id : false;
+		}, $webhooks );
+
+		if ( empty( $found_hooks ) ) {
+			return null;
+		}
+
+		// Filter out empty values
+		$filtered_result = array_filter( $found_hooks );
+
+		return array_pop( $filtered_result );
+	}
+
+	/**
 	 * Sends a request to the BC API to update a webhook. Creates it if it doesn't exist.
 	 */
 	public function update() {
 
-		// Create a password for authenticating the incoming request from BigCommerce.
+		/**
+		 * Create a password for authenticating the incoming request from BigCommerce.
+		 */
 		$password = $this->generate_password();
+
+		$existing_webhook_id = $this->is_webhook_exist();
+
+		/**
+		 * Check if webhook exists in BigCommerce
+		 */
+		if ( ! empty( $existing_webhook_id ) ) {
+			$args = [
+				'headers' => [ self::AUTH_HEADER => $password ],
+			];
+
+			$this->update_webhook( $existing_webhook_id, $args );
+
+			do_action( 'bigcommerce/webhooks/webhook_updated', intval( $existing_webhook_id ), static::NAME, $this->scope() );
+
+			return $existing_webhook_id;
+		}
 
 		$args = [
 			'headers'     => [ self::AUTH_HEADER => $password ],
@@ -85,6 +135,12 @@ abstract class Webhook {
 		$result = (array) $this->create( $args );
 
 		if ( empty( $result[ 'id' ] ) ) {
+			/**
+			 * Fires after webhook update failed.
+			 *
+			 * @param Webhook Webhook Webhook class.
+			 * @param array $result Result.
+			 */
 			do_action( 'bigcommerce/webhooks/update_failed', $this, $result );
 		}
 
@@ -111,6 +167,16 @@ abstract class Webhook {
 		do_action( 'bigcommerce/webhooks/webhook_updated', intval( $result[ 'id' ] ), static::NAME, $this->scope() );
 
 		return $result[ 'id' ];
+	}
+
+	/**
+	 * Send API request to update the webhook data
+	 *
+	 * @param $id
+	 * @param $data
+	 */
+	public function update_webhook( $id, $data) {
+		$this->api_client->updateWebhook( $id, $data );
 	}
 
 	public function destination() {
@@ -141,6 +207,12 @@ abstract class Webhook {
 		$result = (array) $this->api_client->deleteWebhook( $webhook_id );
 
 		if ( empty( $result[ 'id' ] ) ) {
+			/**
+			 * Fires after webhook delete failed.
+			 *
+			 * @param Webhook Webhook Webhook class.
+			 * @param array $result Result.
+			 */
 			do_action( 'bigcommerce/webhooks/delete_failed', $this, $result );
 		}
 
