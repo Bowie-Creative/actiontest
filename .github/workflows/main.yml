@@ -16,4 +16,4 @@ jobs:
       
       # Branches & Environments 
         PRD_BRANCH: main
-        PRD_ENV: selive
+        PRD_ENV: selive 

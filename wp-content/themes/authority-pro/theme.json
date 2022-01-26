@@ -33,6 +33,11 @@
                 "color": "#4fb3bf",
                 "name": "Light cyan"
             }
+            {
+                "slug": "purple",
+                "color": "#E806F0",
+                "name": "Neon Purple"
+            }
         ]
     }
 }
